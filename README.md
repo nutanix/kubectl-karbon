@@ -38,7 +38,7 @@ https://user-images.githubusercontent.com/180613/117446386-4d04f080-af3c-11eb-86
 
 `kubectl karbon help`
 
-### config file
+### Config file
 
 You can specify a config file to define your seetings. The default is $HOME/.kubectl-karbon.yaml and you can use another one with the `--config` flag.
 
@@ -55,7 +55,7 @@ kubeconfig: /path/.kube/config
 
 All entries are optional, you can define only what you need to enforce.
 
-### env variables
+### Env variables
 
 you can also use the following environement variable
 
@@ -65,11 +65,18 @@ you can also use the following environement variable
 `KARBON_USER`  
 `KARBON_INSECURE`  
 `KARBON_VERBOSE`  
+`KARBON_PASSWORD`  
 `KUBECONFIG`
 
 precedence is
 
 `FLAGS` => `ENV` => `CONFIG FILE` => `DEFAULT`
+
+## Password
+
+This tools never stored the password. You can use the `KARBON_PASSWORD` env variable otherwise it should be provided in an interactive way.
+
+
 
 ## Building From Source
 
