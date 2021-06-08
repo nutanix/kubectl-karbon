@@ -77,11 +77,18 @@ var loginCmd = &cobra.Command{
 		cobra.CheckErr(err)
 
 		userArg := viper.GetString("user")
-		fmt.Printf("Enter %s password:\n", userArg)
-		bytePassword, err := term.ReadPassword(int(syscall.Stdin))
-		cobra.CheckErr(err)
 
-		password := string(bytePassword)
+		var password string
+		var ok bool
+		password, ok = os.LookupEnv("KARBON_PASSWORD")
+
+		if !ok {
+			fmt.Printf("Enter %s password:\n", userArg)
+			bytePassword, err := term.ReadPassword(int(syscall.Stdin))
+			cobra.CheckErr(err)
+
+			password = string(bytePassword)
+		}
 
 		req.SetBasicAuth(userArg, password)
 
