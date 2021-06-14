@@ -124,7 +124,7 @@ var loginCmd = &cobra.Command{
 		kubeconfig := viper.GetString("kubeconfig")
 
 		if verbose {
-			fmt.Printf("Kubeconfig file %s succesfully written\n", kubeconfig)
+			fmt.Printf("Kubeconfig file %s successfully written\n", kubeconfig)
 		}
 
 		kubeconfigPath := filepath.Dir(kubeconfig)

@@ -36,7 +36,7 @@ Remove the local kubeconfig file`,
 		err := os.Remove(kubeconfig)
 		cobra.CheckErr(err)
 
-		fmt.Println("Kubeconfig succesfully deleted")
+		fmt.Println("Kubeconfig successfully deleted")
 	},
 }
 
