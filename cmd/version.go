@@ -1,4 +1,5 @@
 /*
+Package cmd version provide version of the tools
 Copyright © 2021 Christophe Jauffret <christophe@nutanix.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");

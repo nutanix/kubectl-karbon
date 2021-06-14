@@ -1,4 +1,5 @@
 /*
+Package cmd logout from the karbon cluster by removing kubeconfig file
 Copyright © 2021 Christophe Jauffret <christophe@nutanix.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
