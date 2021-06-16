@@ -1,0 +1,42 @@
+apiVersion: krew.googlecontainertools.github.com/v1alpha2
+kind: Plugin
+metadata:
+  name: karbon
+spec:
+  version: {{ .TagName }}
+  homepage: https://github.com/nutanix/kubectl-karbon
+  platforms:
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: amd64
+    {{addURIAndSha "https://github.com/nutanix/kubectl-karbon/releases/download/{{ .TagName }}/kubectl-karbon_{{ .TagName }}_darwin_amd64.tar.gz" .TagName }}
+    bin: kubectl-karbon
+  - selector:
+      matchLabels:
+        os: darwin
+        arch: arm64
+    {{addURIAndSha "https://github.com/nutanix/kubectl-karbon/releases/download/{{ .TagName }}/kubectl-karbon_{{ .TagName }}_darwin_arm64.tar.gz" .TagName }}
+    bin: kubectl-karbon
+  - selector:
+      matchLabels:
+        os: linux
+        arch: amd64
+    {{addURIAndSha "https://github.com/nutanix/kubectl-karbon/releases/download/{{ .TagName }}/kubectl-karbon_{{ .TagName }}_linux_amd64.tar.gz" .TagName }}
+    bin: kubectl-karbon
+  - selector:
+      matchLabels:
+        os: linux
+        arch: arm64
+    {{addURIAndSha "https://github.com/nutanix/kubectl-karbon/releases/download/{{ .TagName }}/kubectl-karbon_{{ .TagName }}_linux_arm64.tar.gz" .TagName }}
+    bin: kubectl-karbon
+  - selector:
+      matchLabels:
+        os: windows
+        arch: amd64
+    {{addURIAndSha "https://github.com/nutanix/kubectl-karbon/releases/download/{{ .TagName }}/kubectl-karbon_{{ .TagName }}_windows_amd64.tar.gz" .TagName }}
+    bin: kubectl-karbon.exe
+  shortDescription: Connect to Nutanix Karbon cluster
+  description: |
+    This plugin allow to quickly connect to an existing Nutanix karbon cluster without the need to connect to Prism UI.
+    Read more documentation at: https://github.com/nutanix/kubectl-karbon

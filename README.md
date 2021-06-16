@@ -1,5 +1,3 @@
-
-
 ## kubectl-karbon - Quickly connect to your Karbon cluster!
 
 This kubectl extension allow to quickly connect to an existing karbon cluster without the need to connect to Prism UI.
@@ -11,19 +9,38 @@ https://user-images.githubusercontent.com/180613/117446386-4d04f080-af3c-11eb-86
 
 ---
 
- [![Go Report Card](https://goreportcard.com/badge/github.com/nutanix/kubectl-karbon)](https://goreportcard.com/report/github.com/nutanix/kubectl-karbon)
+[![Go Report Card](https://goreportcard.com/badge/github.com/nutanix/kubectl-karbon)](https://goreportcard.com/report/github.com/nutanix/kubectl-karbon)
 ![CI](https://github.com/nutanix/kubectl-karbon/actions/workflows/ci.yml/badge.svg)
 ![Release](https://github.com/nutanix/kubectl-karbon/actions/workflows/release.yml/badge.svg)
 
 [![release](https://img.shields.io/github/release-pre/nutanix/kubectl-karbon.svg)](https://github.com/nutanix/kubectl-karbon/releases)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/mum4k/termdash/blob/master/LICENSE)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/nutanix/kubectl-karbon/blob/master/LICENSE)
+![Proudly written in Golang](https://img.shields.io/badge/written%20in-Golang-92d1e7.svg)
 [![Releases](https://img.shields.io/github/downloads/nutanix/kubectl-karbon/total.svg)](https://github.com/nutanix/kubectl-karbon/releases)
 
 ---
 
 
 
-## Install
+## Installation
+
+There are several installation options:
+
+- As kubectl plugins
+- Manual installation
+
+### Kubectl Plugins
+
+You can install and use [Krew](https://github.com/kubernetes-sigs/krew/) kubectl
+plugin manager to get the `karbon` plugin .
+
+```sh
+kubectl krew install karbon
+```
+
+After installing, the tools will be available as `kubectl karbon`.
+
+### Manual
 
  - Download your corresponding [release](https://github.com/nutanix/kubectl-karbon/releases)
  - Install the binary somewhere in your PATH (/usr/local/bin for example)
@@ -31,7 +48,7 @@ https://user-images.githubusercontent.com/180613/117446386-4d04f080-af3c-11eb-86
 
 ***MacOS X notes for security error***
 
- once your binary installed launch the following command:
+ Depending of your OS settings when you install you binary manually we must launch the following command:
  `xattr -r -d com.apple.quarantine /usr/local/bin/kubectl-karbon`
 
 ## Usage
