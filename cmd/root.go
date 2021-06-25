@@ -19,8 +19,10 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"syscall"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 
 	"github.com/spf13/viper"
 )
@@ -93,6 +95,25 @@ func initConfig() {
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+		if verbose {
+			fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+		}
 	}
+}
+
+func getCredentials() (string, string) {
+	userArg := viper.GetString("user")
+
+	var password string
+	var ok bool
+	password, ok = os.LookupEnv("KARBON_PASSWORD")
+
+	if !ok {
+		fmt.Printf("Enter %s password:\n", userArg)
+		bytePassword, err := term.ReadPassword(int(syscall.Stdin))
+		cobra.CheckErr(err)
+
+		password = string(bytePassword)
+	}
+	return userArg, password
 }

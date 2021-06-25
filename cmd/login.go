@@ -25,12 +25,10 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
-	"syscall"
 	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"golang.org/x/term"
 )
 
 // flags variable
@@ -42,6 +40,14 @@ var loginCmd = &cobra.Command{
 	Use:   "login",
 	Short: "Authenticate user with Nutanix Prism Central",
 	Long:  `Authenticate user with Nutanix Prism Central and create a local kubeconfig file for the selected cluster`,
+	PreRun: func(cmd *cobra.Command, args []string) {
+
+		viper.BindPFlag("server", cmd.Flags().Lookup("server"))
+		viper.BindPFlag("cluster", cmd.Flags().Lookup("cluster"))
+		viper.BindPFlag("user", cmd.Flags().Lookup("user"))
+		viper.BindPFlag("port", cmd.Flags().Lookup("port"))
+		viper.BindPFlag("insecure", cmd.Flags().Lookup("insecure"))
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 
 		server := viper.GetString("server")
@@ -77,19 +83,7 @@ var loginCmd = &cobra.Command{
 		req, err := http.NewRequest(method, karbonKubeconfigUrl, nil)
 		cobra.CheckErr(err)
 
-		userArg := viper.GetString("user")
-
-		var password string
-		var ok bool
-		password, ok = os.LookupEnv("KARBON_PASSWORD")
-
-		if !ok {
-			fmt.Printf("Enter %s password:\n", userArg)
-			bytePassword, err := term.ReadPassword(int(syscall.Stdin))
-			cobra.CheckErr(err)
-
-			password = string(bytePassword)
-		}
+		userArg, password := getCredentials()
 
 		req.SetBasicAuth(userArg, password)
 
@@ -157,17 +151,12 @@ func init() {
 	}
 
 	loginCmd.Flags().String("server", "", "Address of the PC to authenticate against")
-	viper.BindPFlag("server", loginCmd.Flags().Lookup("server"))
 
 	loginCmd.Flags().StringP("user", "u", user.Username, "Username to authenticate")
-	viper.BindPFlag("user", loginCmd.Flags().Lookup("user"))
 
 	loginCmd.Flags().String("cluster", "", "Karbon cluster to connect against")
-	viper.BindPFlag("cluster", loginCmd.Flags().Lookup("cluster"))
 
 	loginCmd.Flags().Int("port", 9440, "Port to run Application server on")
-	viper.BindPFlag("port", loginCmd.Flags().Lookup("port"))
 
 	loginCmd.Flags().BoolP("insecure", "k", false, "Skip certificate verification (this is insecure)")
-	viper.BindPFlag("insecure", loginCmd.Flags().Lookup("insecure"))
 }
