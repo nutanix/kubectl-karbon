@@ -41,7 +41,7 @@ var kubeconfigResponseJSON map[string]interface{}
 var loginCmd = &cobra.Command{
 	Use:   "login",
 	Short: "Authenticate user with Nutanix Prism Central",
-	Long:  `Authenticate user with Nutanix Prism Central and  create a local kubeconfig file for the selected cluster`,
+	Long:  `Authenticate user with Nutanix Prism Central and create a local kubeconfig file for the selected cluster`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		server := viper.GetString("server")
@@ -60,7 +60,7 @@ var loginCmd = &cobra.Command{
 
 		port := viper.GetInt("port")
 
-		url := fmt.Sprintf("https://%s:%d/karbon/v1/k8s/clusters/%s/kubeconfig", server, port, cluster)
+		karbonKubeconfigUrl := fmt.Sprintf("https://%s:%d/karbon/v1/k8s/clusters/%s/kubeconfig", server, port, cluster)
 		method := "GET"
 
 		if verbose {
@@ -74,7 +74,7 @@ var loginCmd = &cobra.Command{
 
 		timeout, _ := cmd.Flags().GetInt("request-timeout")
 		client := &http.Client{Transport: customTransport, Timeout: time.Second * time.Duration(timeout)}
-		req, err := http.NewRequest(method, url, nil)
+		req, err := http.NewRequest(method, karbonKubeconfigUrl, nil)
 		cobra.CheckErr(err)
 
 		userArg := viper.GetString("user")
