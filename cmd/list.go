@@ -1,5 +1,5 @@
 /*
-Package cmd login to the karbon cluster
+Package cmd list existing karbon cluster(s)
 Copyright © 2021 Christophe Jauffret <christophe@nutanix.com>
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,26 +24,21 @@ import (
 	"net/http"
 	"os"
 	"os/user"
-	"path/filepath"
+	"text/tabwriter"
 	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-// flags variable
-
-var kubeconfigResponseJSON map[string]interface{}
-
-// loginCmd represents the login command
-var loginCmd = &cobra.Command{
-	Use:   "login",
-	Short: "Authenticate user with Nutanix Prism Central",
-	Long:  `Authenticate user with Nutanix Prism Central and create a local kubeconfig file for the selected cluster`,
+// listCmd represents the list command
+var listCmd = &cobra.Command{
+	Use:   "list",
+	Short: "Get the list of k8s clusters",
+	Long:  `Return the list of all kubernetes cluster running on the tergeted Nutanix Karbon platform`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 
 		viper.BindPFlag("server", cmd.Flags().Lookup("server"))
-		viper.BindPFlag("cluster", cmd.Flags().Lookup("cluster"))
 		viper.BindPFlag("user", cmd.Flags().Lookup("user"))
 		viper.BindPFlag("port", cmd.Flags().Lookup("port"))
 		viper.BindPFlag("insecure", cmd.Flags().Lookup("insecure"))
@@ -57,20 +52,13 @@ var loginCmd = &cobra.Command{
 			return
 		}
 
-		cluster := viper.GetString("cluster")
-		if cluster == "" {
-			fmt.Fprintln(os.Stderr, "Error: required flag(s) \"cluster\" not set")
-			cmd.Usage()
-			return
-		}
-
 		port := viper.GetInt("port")
 
-		karbonKubeconfigUrl := fmt.Sprintf("https://%s:%d/karbon/v1/k8s/clusters/%s/kubeconfig", server, port, cluster)
+		karbonListUrl := fmt.Sprintf("https://%s:%d/karbon/v1-beta.1/k8s/clusters", server, port)
 		method := "GET"
 
 		if verbose {
-			fmt.Printf("Connect on https://%s:%d/ and retrieve Kubeconfig for cluster %s\n", server, port, cluster)
+			fmt.Printf("Connect on https://%s:%d/ and retrieve cluster list\n", server, port)
 		}
 
 		insecureSkipVerify := viper.GetBool("insecure")
@@ -80,7 +68,7 @@ var loginCmd = &cobra.Command{
 
 		timeout, _ := cmd.Flags().GetInt("request-timeout")
 		client := &http.Client{Transport: customTransport, Timeout: time.Second * time.Duration(timeout)}
-		req, err := http.NewRequest(method, karbonKubeconfigUrl, nil)
+		req, err := http.NewRequest(method, karbonListUrl, nil)
 		cobra.CheckErr(err)
 
 		userArg, password := getCredentials()
@@ -96,9 +84,6 @@ var loginCmd = &cobra.Command{
 		case 401:
 			fmt.Println("Invalid client credentials")
 			return
-		case 404:
-			fmt.Printf("K8s cluster %s not found\n", cluster)
-			return
 		case 200:
 			// OK
 		default:
@@ -110,53 +95,37 @@ var loginCmd = &cobra.Command{
 		body, err := ioutil.ReadAll(res.Body)
 		cobra.CheckErr(err)
 
-		// fmt.Println(string(body))
-		json.Unmarshal([]byte(body), &kubeconfigResponseJSON)
-		// fmt.Printf(kubeconfigResponseJSON["kube_config"].(string))
+		clusters := make([]map[string]interface{}, 0)
+		json.Unmarshal([]byte(body), &clusters)
 
-		data := []byte(kubeconfigResponseJSON["kube_config"].(string))
+		w := new(tabwriter.Writer)
+		w.Init(os.Stdout, 8, 8, 0, '\t', 0)
 
-		kubeconfig := viper.GetString("kubeconfig")
+		defer w.Flush()
 
-		if verbose {
-			fmt.Printf("Kubeconfig file %s successfully written\n", kubeconfig)
+		fmt.Fprintf(w, "%s\t%s\t%s\t", "NAME", "VERSION", "STATUS")
+
+		for _, cluster := range clusters {
+			fmt.Fprintf(w, "\n%s\tv%s\t%s\t", cluster["name"], cluster["version"], cluster["status"].(string)[1:])
 		}
-
-		kubeconfigPath := filepath.Dir(kubeconfig)
-		_, err = os.Stat(kubeconfigPath)
-
-		if os.IsNotExist(err) {
-			err := os.MkdirAll(kubeconfigPath, 0700)
-			cobra.CheckErr(err)
-		}
-
-		err = ioutil.WriteFile(kubeconfig, data, 0600)
-		cobra.CheckErr(err)
-
-		fmt.Printf(`Logged in successfully
-
-You have access to the following cluster:
-  %s
-        `, cluster)
+		fmt.Fprintf(w, "\n")
 
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(loginCmd)
+	rootCmd.AddCommand(listCmd)
 
 	user, err := user.Current()
 	if err != nil {
 		panic(err)
 	}
 
-	loginCmd.Flags().String("server", "", "Address of the PC to authenticate against")
+	listCmd.Flags().String("server", "", "Address of the PC to authenticate against")
 
-	loginCmd.Flags().StringP("user", "u", user.Username, "Username to authenticate")
+	listCmd.Flags().StringP("user", "u", user.Username, "Username to authenticate")
 
-	loginCmd.Flags().String("cluster", "", "Karbon cluster to connect against")
+	listCmd.Flags().Int("port", 9440, "Port to run Application server on")
 
-	loginCmd.Flags().Int("port", 9440, "Port to run Application server on")
-
-	loginCmd.Flags().BoolP("insecure", "k", false, "Skip certificate verification (this is insecure)")
+	listCmd.Flags().BoolP("insecure", "k", false, "Skip certificate verification (this is insecure)")
 }
