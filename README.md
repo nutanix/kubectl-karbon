@@ -66,7 +66,7 @@ cluster: karbon_cluster_name
 user: admin
 insecure: true
 verbose: false
-kubeconfig: /path/.kube/config
+#kubeconfig: /path/.kube/config
 ```
 *config file example*
 

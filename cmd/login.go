@@ -25,6 +25,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -118,8 +119,10 @@ var loginCmd = &cobra.Command{
 
 		kubeconfig := viper.GetString("kubeconfig")
 
-		if verbose {
-			fmt.Printf("Kubeconfig file %s successfully written\n", kubeconfig)
+		if strings.HasPrefix(kubeconfig, "~/") {
+			userHomeDir, err := os.UserHomeDir()
+			cobra.CheckErr(err)
+			kubeconfig = filepath.Join(userHomeDir, kubeconfig[2:])
 		}
 
 		kubeconfigPath := filepath.Dir(kubeconfig)
@@ -133,11 +136,16 @@ var loginCmd = &cobra.Command{
 		err = ioutil.WriteFile(kubeconfig, data, 0600)
 		cobra.CheckErr(err)
 
+		if verbose {
+			fmt.Printf("Kubeconfig file %s successfully written\n", kubeconfig)
+		}
+
 		fmt.Printf(`Logged in successfully
 
 You have access to the following cluster:
   %s
-        `, cluster)
+
+`, cluster)
 
 	},
 }
