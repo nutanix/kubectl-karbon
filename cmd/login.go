@@ -48,6 +48,8 @@ var loginCmd = &cobra.Command{
 		viper.BindPFlag("user", cmd.Flags().Lookup("user"))
 		viper.BindPFlag("port", cmd.Flags().Lookup("port"))
 		viper.BindPFlag("insecure", cmd.Flags().Lookup("insecure"))
+		viper.BindPFlag("kubie", cmd.Flags().Lookup("kubie"))
+		viper.BindPFlag("kubie-path", cmd.Flags().Lookup("kubie-path"))
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -119,6 +121,12 @@ var loginCmd = &cobra.Command{
 
 		kubeconfig := viper.GetString("kubeconfig")
 
+		if viper.GetBool("kubie") {
+			kubiePath := viper.GetString("kubie-path")
+			clusterFile := fmt.Sprintf("%s.yaml", cluster)
+			kubeconfig = filepath.Join(kubiePath, clusterFile)
+		}
+
 		if strings.HasPrefix(kubeconfig, "~/") {
 			userHomeDir, err := os.UserHomeDir()
 			cobra.CheckErr(err)
@@ -167,4 +175,11 @@ func init() {
 	loginCmd.Flags().Int("port", 9440, "Port to run Application server on")
 
 	loginCmd.Flags().BoolP("insecure", "k", false, "Skip certificate verification (this is insecure)")
+
+	loginCmd.Flags().Bool("kubie", false, "Store kubeconfig in independent file in kubie-path directory")
+
+	userHomeDir, err := os.UserHomeDir()
+	cobra.CheckErr(err)
+	defaultKubiePath := fmt.Sprintf("%s/.kube/kubie/", userHomeDir)
+	loginCmd.Flags().String("kubie-path", defaultKubiePath, "Path to kubie kubeconfig directory")
 }
