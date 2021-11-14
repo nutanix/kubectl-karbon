@@ -100,7 +100,7 @@ This tools never stored the password. You can use the `KARBON_PASSWORD` env vari
 ## Kubie mode
 
 Allows full integration with the excellent [Kubie tool](https://blog.sbstp.ca/introducing-kubie/) who has support for split configuration files, meaning it can load Kubernetes contexts from multiple files.  
-When this mode is active each kubeconfig file is stored in an independent file `~/.kube/cluster_name.yaml`
+When this mode is active each kubeconfig file is stored as an independent file in the kubie-path directoy (default `~/.kube/kubie/cluster_name.yaml`)
 
 ## Building From Source
 
