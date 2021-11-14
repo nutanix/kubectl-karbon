@@ -1,7 +1,7 @@
 ## kubectl-karbon - Quickly connect to your Karbon cluster!
 
-This kubectl extension allow to quickly connect to an existing karbon cluster without the need to connect to Prism UI.
-He use the Karbon API to get kubeconfig file and install it on your local system.
+This kubectl extension allows to quickly connect to an existing karbon cluster without the need to connect to Prism UI.
+It uses the Karbon API to get kubeconfig file and install it on your local system.
 
 ## Demo
 
