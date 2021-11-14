@@ -66,6 +66,8 @@ cluster: karbon_cluster_name
 user: admin
 insecure: true
 verbose: false
+kubie: false
+#kubie-path: ~/.kube/.kubie/
 #kubeconfig: /path/.kube/config
 ```
 *config file example*
@@ -83,6 +85,8 @@ you can also use the following environement variable
 `KARBON_INSECURE`  
 `KARBON_VERBOSE`  
 `KARBON_PASSWORD`  
+`KARBON_KUBIE`  
+`KARBON_KUBIE_PATH`
 `KUBECONFIG`
 
 precedence is
@@ -93,7 +97,10 @@ precedence is
 
 This tools never stored the password. You can use the `KARBON_PASSWORD` env variable otherwise it should be provided in an interactive way.
 
+## Kubie mode
 
+Allows full integration with the excellent [Kubie tool](https://blog.sbstp.ca/introducing-kubie/) who has support for split configuration files, meaning it can load Kubernetes contexts from multiple files.  
+When this mode is active each kubeconfig file is stored in an independent file `~/.kube/cluster_name.yaml`
 
 ## Building From Source
 
