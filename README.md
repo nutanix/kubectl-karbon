@@ -56,7 +56,7 @@ After installing, the tools will be available as `kubectl karbon`.
 * `kubectl karbon help` Help about any command
 * `kubectl karbon list` Get the list of k8s clusters
 * `kubectl karbon login` Authenticate user with Nutanix Prism Central
-* `kubectl karbon logout` Destroys current sessions with all Karbon clusters
+* `kubectl karbon logout` Destroy the current kubeconfig session
 * `kubectl karbon version` Prints the version of the plugin
 
 ### Config file
