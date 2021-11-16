@@ -29,3 +29,18 @@ archives:
     name_template: "{{ .ProjectName }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
     wrap_in_directory: false
     format: tar.gz
+
+# Homebrew
+brews:
+  - name: kubectl-karbon
+    tap:
+      owner: nutanix
+      name: homebrew-tap
+    commit_author:
+      name: tuxtof
+      email: christophe.jauffret@nutanix.com
+    folder: Formula
+    homepage: https://github.com/nutanix/kubectl-karbon 
+    description: Kubectl extension to quickly connect to an existing karbon cluster!
+    test: |
+      system "kubectl-karbon version"
