@@ -27,8 +27,8 @@ import (
 // logoutCmd represents the logout command
 var logoutCmd = &cobra.Command{
 	Use:   "logout",
-	Short: "Destroys current sessions with all Karbon clusters",
-	Long: `Destroys current sessions with all Karbon clusters
+	Short: "Destroy the current kubeconfig session",
+	Long: `Destroy the current kubernetes session
 	
 Remove the local kubeconfig file`,
 	Run: func(cmd *cobra.Command, args []string) {
