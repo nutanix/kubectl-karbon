@@ -26,8 +26,11 @@ https://user-images.githubusercontent.com/180613/117446386-4d04f080-af3c-11eb-86
 
 There are several installation options:
 
-- As kubectl plugins
+- As kubectl Krew plugins
+- As Homebrew or Linuxbrew package
 - Manual installation
+
+After installing, the tools will be available as `kubectl karbon`.
 
 ### Kubectl Plugins
 
@@ -38,7 +41,17 @@ plugin manager to get the `karbon` plugin .
 kubectl krew install karbon
 ```
 
-After installing, the tools will be available as `kubectl karbon`.
+Keep up-to-date with `kubectl krew upgrade karbon` (or kubectl krew upgrade to upgrade everything)
+
+### Homebrew Package
+
+You can install with [Homebrew](https://brew.sh) for macOS or [LinuxBrew](https://docs.brew.sh/Homebrew-on-Linux) for Linux
+
+```sh
+brew install nutanix/tap/kubectl-karbon
+```
+
+Keep up-to-date with `brew upgrade kubectl-karbon` (or brew upgrade to upgrade everything)
 
 ### Manual
 
