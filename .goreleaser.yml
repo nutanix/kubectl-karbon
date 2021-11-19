@@ -37,6 +37,7 @@ brews:
       owner: nutanix
       name: homebrew-tap
       branch: main
+      token: "{{ .Env.NUTANIX_BOT_PAT }}"
     commit_author:
       name: tuxtof
       email: christophe.jauffret@nutanix.com
