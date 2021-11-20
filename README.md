@@ -103,7 +103,7 @@ you can also use the following environement variable
 `KARBON_VERBOSE`  
 `KARBON_PASSWORD`  
 `KARBON_KUBIE`  
-`KARBON_KUBIE_PATH`
+`KARBON_KUBIE_PATH`  
 `KUBECONFIG`
 
 precedence is
