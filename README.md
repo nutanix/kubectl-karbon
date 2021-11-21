@@ -70,6 +70,7 @@ Keep up-to-date with `brew upgrade kubectl-karbon` (or brew upgrade to upgrade e
 * `kubectl karbon list` Get the list of k8s clusters
 * `kubectl karbon login` Authenticate user with Nutanix Prism Central
 * `kubectl karbon logout` Destroy the current kubeconfig session
+* `kubectl karbon ssh` Manage SSH key for a specific cluster
 * `kubectl karbon version` Prints the version of the plugin
 
 ### Config file
