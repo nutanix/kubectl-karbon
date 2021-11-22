@@ -96,7 +96,7 @@ func addKeyAgent(cluster string, sshResponseJSON map[string]interface{}) error {
 	err = agentClient.Add(agent.AddedKey{
 		PrivateKey:   parsedKey,
 		Certificate:  sshCert,
-		Comment:      fmt.Sprintf("karbon cluser %s", cluster),
+		Comment:      fmt.Sprintf("karbon cluster %s", cluster),
 		LifetimeSecs: uint32(diff.Seconds()),
 	})
 	cobra.CheckErr(err)
