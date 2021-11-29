@@ -16,19 +16,34 @@ limitations under the License.
 package cmd
 
 import (
+	"crypto/tls"
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
+	"syscall"
 	"time"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
+	"golang.org/x/term"
 )
+
+type nutanixCluster struct {
+	server   string
+	login    string
+	password string
+	port     int
+	timeout  int
+	insecure bool
+}
 
 func saveKeyFile(cluster string, sshResponseJSON map[string]interface{}) error {
 
@@ -60,6 +75,34 @@ func saveKeyFile(cluster string, sshResponseJSON map[string]interface{}) error {
 	}
 	return nil
 
+}
+
+func deleteKeyFile(cluster string) error {
+	userHomeDir, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+
+	sshDir := filepath.Join(userHomeDir, ".ssh")
+
+	privateKeyFile := filepath.Join(sshDir, cluster)
+	err = os.Remove(privateKeyFile)
+	if err != nil {
+		return err
+	}
+
+	certificateFile := filepath.Join(sshDir, fmt.Sprintf("%s-cert.pub", cluster))
+	err = os.Remove(certificateFile)
+	if err != nil {
+		return err
+	}
+
+	if verbose {
+		fmt.Printf("privateKey file %s successfully deleted\n", privateKeyFile)
+		fmt.Printf("certificate file %s successfully deleted\n", certificateFile)
+	}
+
+	return nil
 }
 
 func addKeyAgent(cluster string, sshResponseJSON map[string]interface{}) error {
@@ -108,6 +151,44 @@ func addKeyAgent(cluster string, sshResponseJSON map[string]interface{}) error {
 
 }
 
+func deleteKeyAgent(cluster string) error {
+
+	// Get the ssh agent
+	socket := os.Getenv("SSH_AUTH_SOCK")
+
+	if socket == "" {
+		fmt.Println("SSH_AUTH_SOCK environment variable not set")
+	}
+
+	conn, err := net.Dial("unix", socket)
+	if err != nil {
+		return err
+	}
+
+	agentClient := agent.NewClient(conn)
+
+	keyList, err := agentClient.List()
+	if err != nil {
+		return err
+	}
+
+	searchString := fmt.Sprintf("karbon cluster %s", cluster)
+
+	for _, key := range keyList {
+		if key.Comment == searchString {
+			err = agentClient.Remove(key)
+			if err != nil {
+				return err
+			}
+			if verbose {
+				fmt.Printf("SSH key for cluster '%s' deleted from ssh-agent\n", cluster)
+			}
+		}
+	}
+
+	return nil
+}
+
 func unmarshalCert(bytes []byte) (*ssh.Certificate, error) {
 	pub, _, _, _, err := ssh.ParseAuthorizedKey(bytes)
 	if err != nil {
@@ -118,4 +199,86 @@ func unmarshalCert(bytes []byte) (*ssh.Certificate, error) {
 		return nil, fmt.Errorf("failed to cast to certificate")
 	}
 	return cert, nil
+}
+
+func getCredentials() (string, string) {
+	userArg := viper.GetString("user")
+
+	var password string
+	var ok bool
+	password, ok = os.LookupEnv("KARBON_PASSWORD")
+
+	if !ok {
+		fmt.Printf("Enter %s password:\n", userArg)
+		bytePassword, err := term.ReadPassword(int(syscall.Stdin))
+		cobra.CheckErr(err)
+
+		password = string(bytePassword)
+	}
+	return userArg, password
+}
+
+func newNutanixCluster() (*nutanixCluster, error) {
+	server := viper.GetString("server")
+	if server == "" {
+		return nil, fmt.Errorf("error: required flag \"server\" not set")
+	}
+
+	userArg, password := getCredentials()
+
+	c := nutanixCluster{
+		server:   server,
+		login:    userArg,
+		password: password,
+		port:     viper.GetInt("port"),
+		timeout:  viper.GetInt("timeout"),
+		insecure: viper.GetBool("insecure"),
+	}
+	return &c, nil
+}
+
+func nutanixClusterRequest(c *nutanixCluster, method string, path string, payload []byte) (map[string]interface{}, error) {
+	customTransport := http.DefaultTransport.(*http.Transport).Clone()
+	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: c.insecure}
+
+	client := &http.Client{Transport: customTransport, Timeout: time.Second * time.Duration(c.timeout)}
+	requestUrl := fmt.Sprintf("https://%s:%d/%s", c.server, c.port, path)
+	req, err := http.NewRequest(method, requestUrl, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	req.SetBasicAuth(c.login, c.password)
+
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+
+	defer res.Body.Close()
+
+	switch res.StatusCode {
+	case 401:
+		return nil, fmt.Errorf("invalid client credentials")
+	case 404:
+		return nil, fmt.Errorf("karbon cluster not found")
+	case 200:
+		// OK
+	default:
+		return nil, fmt.Errorf("internal Error")
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var ResponseJSON map[string]interface{}
+
+	// fmt.Println(string(body))
+	json.Unmarshal([]byte(body), &ResponseJSON)
+	// fmt.Printf(kubeconfigResponseJSON["kube_config"].(string))
+
+	return ResponseJSON, nil
 }
