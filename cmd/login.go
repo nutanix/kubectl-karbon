@@ -17,30 +17,24 @@ limitations under the License.
 package cmd
 
 import (
-	"crypto/tls"
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"os/user"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-// flags variable
-
-var kubeconfigResponseJSON map[string]interface{}
-
 // loginCmd represents the login command
 var loginCmd = &cobra.Command{
 	Use:   "login",
 	Short: "Authenticate user with Nutanix Prism Central",
-	Long:  `Authenticate user with Nutanix Prism Central and create a local kubeconfig file for the selected cluster`,
+	Long: `Authenticate user with Nutanix Prism Central and create a local kubeconfig file for the selected cluster.
+
+If option enabled retrieve SSH key/cert and add them to ssh-agent or in file in ~/.ssh/ folder`,
 	PreRun: func(cmd *cobra.Command, args []string) {
 
 		viper.BindPFlag("server", cmd.Flags().Lookup("server"))
@@ -50,72 +44,36 @@ var loginCmd = &cobra.Command{
 		viper.BindPFlag("insecure", cmd.Flags().Lookup("insecure"))
 		viper.BindPFlag("kubie", cmd.Flags().Lookup("kubie"))
 		viper.BindPFlag("kubie-path", cmd.Flags().Lookup("kubie-path"))
+		viper.BindPFlag("ssh-agent", cmd.Flags().Lookup("ssh-agent"))
+		viper.BindPFlag("ssh-file", cmd.Flags().Lookup("ssh-file"))
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 
-		server := viper.GetString("server")
-		if server == "" {
-			fmt.Fprintln(os.Stderr, "Error: required flag(s) \"server\" not set")
+		karbonCluster := viper.GetString("cluster")
+		if karbonCluster == "" {
+			fmt.Fprintln(os.Stderr, "Error: required flag \"cluster\" not set")
 			cmd.Usage()
 			return
 		}
 
-		cluster := viper.GetString("cluster")
-		if cluster == "" {
-			fmt.Fprintln(os.Stderr, "Error: required flag(s) \"cluster\" not set")
+		nutanixCluster, err := newNutanixCluster()
+		if err != nil {
+			fmt.Println(err)
 			cmd.Usage()
 			return
 		}
 
-		port := viper.GetInt("port")
-
-		karbonKubeconfigUrl := fmt.Sprintf("https://%s:%d/karbon/v1/k8s/clusters/%s/kubeconfig", server, port, cluster)
-		method := "GET"
+		//  Kubeconfig management section
 
 		if verbose {
-			fmt.Printf("Connect on https://%s:%d/ and retrieve Kubeconfig for cluster %s\n", server, port, cluster)
+			fmt.Printf("Connect on https://%s:%d/ and retrieve Kubeconfig for cluster %s\n", nutanixCluster.server, nutanixCluster.port, karbonCluster)
 		}
 
-		insecureSkipVerify := viper.GetBool("insecure")
+		karbonKubeconfigPath := fmt.Sprintf("/karbon/v1/k8s/clusters/%s/kubeconfig", karbonCluster)
+		method := "GET"
 
-		customTransport := http.DefaultTransport.(*http.Transport).Clone()
-		customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: insecureSkipVerify}
-
-		timeout, _ := cmd.Flags().GetInt("request-timeout")
-		client := &http.Client{Transport: customTransport, Timeout: time.Second * time.Duration(timeout)}
-		req, err := http.NewRequest(method, karbonKubeconfigUrl, nil)
+		kubeconfigResponseJSON, err := nutanixClusterRequest(nutanixCluster, method, karbonKubeconfigPath, nil)
 		cobra.CheckErr(err)
-
-		userArg, password := getCredentials()
-
-		req.SetBasicAuth(userArg, password)
-
-		res, err := client.Do(req)
-		cobra.CheckErr(err)
-
-		defer res.Body.Close()
-
-		switch res.StatusCode {
-		case 401:
-			fmt.Println("Invalid client credentials")
-			return
-		case 404:
-			fmt.Printf("K8s cluster %s not found\n", cluster)
-			return
-		case 200:
-			// OK
-		default:
-			fmt.Println("Internal Error")
-			return
-
-		}
-
-		body, err := ioutil.ReadAll(res.Body)
-		cobra.CheckErr(err)
-
-		// fmt.Println(string(body))
-		json.Unmarshal([]byte(body), &kubeconfigResponseJSON)
-		// fmt.Printf(kubeconfigResponseJSON["kube_config"].(string))
 
 		data := []byte(kubeconfigResponseJSON["kube_config"].(string))
 
@@ -123,7 +81,7 @@ var loginCmd = &cobra.Command{
 
 		if viper.GetBool("kubie") {
 			kubiePath := viper.GetString("kubie-path")
-			clusterFile := fmt.Sprintf("%s.yaml", cluster)
+			clusterFile := fmt.Sprintf("%s.yaml", karbonCluster)
 			kubeconfig = filepath.Join(kubiePath, clusterFile)
 		}
 
@@ -148,12 +106,29 @@ var loginCmd = &cobra.Command{
 			fmt.Printf("Kubeconfig file %s successfully written\n", kubeconfig)
 		}
 
-		fmt.Printf(`Logged in successfully
+		// SSH key/cert management section
 
-You have access to the following cluster:
-  %s
+		karbonSSHPath := fmt.Sprintf("/karbon/v1/k8s/clusters/%s/ssh", karbonCluster)
+		method = "GET"
 
-`, cluster)
+		if verbose {
+			fmt.Printf("Connect on https://%s:%d/ and retrieve SSH key/cert for cluster %s\n", nutanixCluster.server, nutanixCluster.port, karbonCluster)
+		}
+
+		karbonSSHJSON, err := nutanixClusterRequest(nutanixCluster, method, karbonSSHPath, nil)
+		cobra.CheckErr(err)
+
+		if viper.GetBool("ssh-file") {
+			err = saveKeyFile(karbonCluster, karbonSSHJSON)
+			cobra.CheckErr(err)
+		}
+
+		if viper.GetBool("ssh-agent") {
+			err = addKeyAgent(karbonCluster, karbonSSHJSON)
+			cobra.CheckErr(err)
+		}
+
+		fmt.Printf("Logged successfully into %s cluster\n", karbonCluster)
 
 	},
 }
@@ -182,4 +157,7 @@ func init() {
 	cobra.CheckErr(err)
 	defaultKubiePath := fmt.Sprintf("%s/.kube/kubie/", userHomeDir)
 	loginCmd.Flags().String("kubie-path", defaultKubiePath, "Path to kubie kubeconfig directory")
+
+	loginCmd.Flags().Bool("ssh-agent", false, "Add Key and Cert in SSH agent")
+	loginCmd.Flags().Bool("ssh-file", false, "Save Key and Cert in ~/.ssh/ directory")
 }

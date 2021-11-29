@@ -19,6 +19,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -27,30 +28,65 @@ import (
 // logoutCmd represents the logout command
 var logoutCmd = &cobra.Command{
 	Use:   "logout",
-	Short: "Destroy the current kubeconfig session",
-	Long: `Destroy the current kubernetes session
+	Short: "Remove all authentication items for the selected Karbon cluster",
+	Long: `Remove all authentication items for the selected Karbon cluster.
 	
-Remove the local kubeconfig file`,
+Remove the local kubeconfig file, The SSH key/cert from file and SSH agent`,
+	PreRun: func(cmd *cobra.Command, args []string) {
+
+		viper.BindPFlag("cluster", cmd.Flags().Lookup("cluster"))
+		viper.BindPFlag("kubie", cmd.Flags().Lookup("kubie"))
+		viper.BindPFlag("kubie-path", cmd.Flags().Lookup("kubie-path"))
+		viper.BindPFlag("ssh-agent", cmd.Flags().Lookup("ssh-agent"))
+		viper.BindPFlag("ssh-file", cmd.Flags().Lookup("ssh-file"))
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 
-		kubeconfig := viper.GetString("kubeconfig")
-		err := os.Remove(kubeconfig)
-		cobra.CheckErr(err)
+		karbonCluster := viper.GetString("cluster")
+		if karbonCluster == "" {
+			fmt.Fprintln(os.Stderr, "Error: required flag \"cluster\" not set")
+			cmd.Usage()
+			return
+		}
 
-		fmt.Println("Kubeconfig successfully deleted")
+		kubeconfig := viper.GetString("kubeconfig")
+
+		if viper.GetBool("kubie") {
+			kubiePath := viper.GetString("kubie-path")
+			clusterFile := fmt.Sprintf("%s.yaml", karbonCluster)
+			kubeconfig = filepath.Join(kubiePath, clusterFile)
+		}
+
+		err := os.Remove(kubeconfig)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+
+		if viper.GetBool("ssh-file") {
+			err := deleteKeyFile(karbonCluster)
+			cobra.CheckErr(err)
+		}
+
+		if viper.GetBool("ssh-agent") {
+			err = deleteKeyAgent(karbonCluster)
+			cobra.CheckErr(err)
+		}
+
+		fmt.Printf("Logged out successfully from %s cluster\n", karbonCluster)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(logoutCmd)
 
-	// Here you will define your flags and configuration settings.
+	logoutCmd.Flags().String("cluster", "", "Karbon cluster to disconnect against")
+	logoutCmd.Flags().Bool("kubie", false, "Remove kubeconfig independent file from kubie-path directory")
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// logoutCmd.PersistentFlags().String("foo", "", "A help for foo")
+	userHomeDir, err := os.UserHomeDir()
+	cobra.CheckErr(err)
+	defaultKubiePath := fmt.Sprintf("%s/.kube/kubie/", userHomeDir)
+	logoutCmd.Flags().String("kubie-path", defaultKubiePath, "Path to kubie kubeconfig directory")
 
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// logoutCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	logoutCmd.Flags().Bool("ssh-agent", false, "Remove Key and Cert from SSH agent")
+	logoutCmd.Flags().Bool("ssh-file", false, "Remove Key and Cert from~/.ssh/ directory")
 }

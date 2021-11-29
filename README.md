@@ -68,9 +68,9 @@ Keep up-to-date with `brew upgrade kubectl-karbon` (or brew upgrade to upgrade e
 
 * `kubectl karbon help` Help about any command
 * `kubectl karbon list` Get the list of k8s clusters
-* `kubectl karbon login` Authenticate user with Nutanix Prism Central
-* `kubectl karbon logout` Destroy the current kubeconfig session
-* `kubectl karbon version` Prints the version of the plugin
+* `kubectl karbon login` Authenticate user with Nutanix Prism Central, create kubeconfig file, get ssh key/cert, ...
+* `kubectl karbon logout` Remove kubeconfig file, remove ssh key/cert file, clean ssh-agent ...
+* `kubectl karbon version` Print the version of the plugin
 
 ### Config file
 
@@ -84,6 +84,8 @@ user: admin
 insecure: true
 verbose: false
 kubie: false
+#ssh-agent: false
+#ssh-file: false
 #kubie-path: ~/.kube/.kubie/
 #kubeconfig: /path/.kube/config
 ```
@@ -104,6 +106,8 @@ you can also use the following environement variable
 `KARBON_PASSWORD`  
 `KARBON_KUBIE`  
 `KARBON_KUBIE_PATH`  
+`KARBON_SSH_AGENT`  
+`KARBON_SSH_FILE`  
 `KUBECONFIG`
 
 precedence is
@@ -114,10 +118,15 @@ precedence is
 
 This tools never stored the password. You can use the `KARBON_PASSWORD` env variable otherwise it should be provided in an interactive way.
 
+## SSH option
+
+During login, allow SSH key and cert retrieval.  
+The key and cert can be added to the running ssh-agent (`--ssh-agent`) or saved in file inside the ~/.ssh/ directory (`--ssh-file`).
+
 ## Kubie mode
 
 Allows full integration with the excellent [Kubie tool](https://blog.sbstp.ca/introducing-kubie/) who has support for split configuration files, meaning it can load Kubernetes contexts from multiple files.  
-When this mode is active each kubeconfig file is stored as an independent file in the kubie-path directoy (default `~/.kube/kubie/cluster_name.yaml`)
+When this mode is active (`--kubie`) each kubeconfig file is stored as an independent file in the kubie-path directoy (default `~/.kube/kubie/cluster_name.yaml`)
 
 ## Building From Source
 

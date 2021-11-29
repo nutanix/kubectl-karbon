@@ -16,6 +16,9 @@ test: $(SOURCES)
 clean:
 	@rm -rf $(BINARY)
 
+clean-install:
+	@rm -rf /usr/local/bin/$(BINARY)
+
 install: $(BINARY)
 	cp $(BINARY) /usr/local/bin/$(BINARY)
 
