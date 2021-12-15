@@ -31,7 +31,7 @@ var versionCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Printf("kubectl-karbon: version %s (%s)\n", version.Version, version.Commit)
 		if verbose {
-			fmt.Printf("build date:%s by:%s\nplatform: %s/%s\n", version.Date, version.BuiltBy, version.OsName, version.PlatformName)
+			fmt.Printf("build date:%s by: %s\nplatform: %s/%s\n", version.Date, version.BuiltBy, version.OsName, version.PlatformName)
 		}
 	},
 }

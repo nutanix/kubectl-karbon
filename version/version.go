@@ -1,5 +1,7 @@
 package version
 
+import "runtime"
+
 // Default build-time variable.
 // These values are overridden via ldflags
 var (
@@ -7,6 +9,6 @@ var (
 	Commit       = "none"
 	Date         = "unknown"
 	BuiltBy      = "unknown"
-	OsName       = ""
-	PlatformName = ""
+	OsName       = runtime.GOOS
+	PlatformName = runtime.GOARCH
 )

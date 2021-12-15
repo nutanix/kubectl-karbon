@@ -6,7 +6,7 @@ BINARY := kubectl-karbon
 BUILD=`date +%FT%T%z`
 PLATFORM=`uname`
 
-LDFLAGS=-ldflags "-w -s -X github.com/nutanix/kubectl-karbon/version.Date=${BUILD} -X github.com/nutanix/kubectl-karbon/version.BuiltBy=Makefile -X github.com/nutanix/kubectl-karbon/version.PlatformName=${PLATFORM}"
+LDFLAGS=-ldflags "-w -s -X github.com/nutanix/kubectl-karbon/version.Date=${BUILD} -X github.com/nutanix/kubectl-karbon/version.BuiltBy=Makefile"
 
 build: kubectl-karbon
 
