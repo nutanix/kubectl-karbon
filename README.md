@@ -10,6 +10,7 @@ https://user-images.githubusercontent.com/180613/117446386-4d04f080-af3c-11eb-86
 ---
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/nutanix/kubectl-karbon)](https://goreportcard.com/report/github.com/nutanix/kubectl-karbon)
+[![Maintainability](https://api.codeclimate.com/v1/badges/e0f43f5c74eabfa8bc4d/maintainability)](https://codeclimate.com/github/nutanix/kubectl-karbon/maintainability)
 ![CI](https://github.com/nutanix/kubectl-karbon/actions/workflows/ci.yml/badge.svg)
 ![Release](https://github.com/nutanix/kubectl-karbon/actions/workflows/release.yml/badge.svg)
 
