@@ -17,15 +17,10 @@ limitations under the License.
 package cmd
 
 import (
-	"crypto/tls"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"os"
 	"os/user"
 	"text/tabwriter"
-	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -45,58 +40,8 @@ var listCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 
-		server := viper.GetString("server")
-		if server == "" {
-			fmt.Fprintln(os.Stderr, "Error: required flag(s) \"server\" not set")
-			cmd.Usage()
-			return
-		}
-
-		port := viper.GetInt("port")
-
-		karbonListUrl := fmt.Sprintf("https://%s:%d/karbon/v1-beta.1/k8s/clusters", server, port)
-		method := "GET"
-
-		if verbose {
-			fmt.Printf("Connect on https://%s:%d/ and retrieve cluster list\n", server, port)
-		}
-
-		insecureSkipVerify := viper.GetBool("insecure")
-
-		customTransport := http.DefaultTransport.(*http.Transport).Clone()
-		customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: insecureSkipVerify}
-
-		timeout, _ := cmd.Flags().GetInt("request-timeout")
-		client := &http.Client{Transport: customTransport, Timeout: time.Second * time.Duration(timeout)}
-		req, err := http.NewRequest(method, karbonListUrl, nil)
+		clusters, err := listClusters(cmd)
 		cobra.CheckErr(err)
-
-		userArg, password := getCredentials()
-
-		req.SetBasicAuth(userArg, password)
-
-		res, err := client.Do(req)
-		cobra.CheckErr(err)
-
-		defer res.Body.Close()
-
-		switch res.StatusCode {
-		case 401:
-			fmt.Println("Invalid client credentials")
-			return
-		case 200:
-			// OK
-		default:
-			fmt.Println("Internal Error")
-			return
-
-		}
-
-		body, err := ioutil.ReadAll(res.Body)
-		cobra.CheckErr(err)
-
-		clusters := make([]map[string]interface{}, 0)
-		json.Unmarshal([]byte(body), &clusters)
 
 		w := new(tabwriter.Writer)
 		w.Init(os.Stdout, 8, 8, 0, '\t', 0)

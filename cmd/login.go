@@ -50,10 +50,14 @@ If option enabled retrieve SSH key/cert and add them to ssh-agent or in file in 
 	Run: func(cmd *cobra.Command, args []string) {
 
 		karbonCluster := viper.GetString("cluster")
+		var err error
+
 		if karbonCluster == "" {
-			fmt.Fprintln(os.Stderr, "Error: required flag \"cluster\" not set")
-			cmd.Usage()
-			return
+			// fmt.Fprintln(os.Stderr, "Error: required flag \"cluster\" not set")
+			// cmd.Usage()
+			// return
+			karbonCluster, err = selectCluster(cmd)
+			cobra.CheckErr(err)
 		}
 
 		nutanixCluster, err := newNutanixCluster()
