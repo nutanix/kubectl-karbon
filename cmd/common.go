@@ -75,7 +75,7 @@ func (nutanix *nutanixCluster) selectCluster() (string, error) {
 
 func (nutanix *nutanixCluster) listKarbonClusters() ([]map[string]interface{}, error) {
 
-	karbonListUrl := fmt.Sprintf("/karbon/v1-beta.1/k8s/clusters")
+	karbonListUrl := fmt.Sprint("/karbon/v1-beta.1/k8s/clusters")
 	method := "GET"
 
 	if verbose {
