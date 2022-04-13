@@ -58,7 +58,7 @@ var listCmd = &cobra.Command{
 		fmt.Fprintf(w, "%s\t%s\t%s\t", "NAME", "VERSION", "STATUS")
 
 		for _, cluster := range clusters {
-			fmt.Fprintf(w, "\n%s\tv%s\t%s\t", cluster["name"], cluster["version"], cluster["status"].(string)[1:])
+			fmt.Fprintf(w, "\n%s\tv%s\t%s\t", cluster.Name, cluster.Version, cluster.Status[1:])
 		}
 		fmt.Fprintf(w, "\n")
 

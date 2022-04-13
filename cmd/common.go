@@ -46,6 +46,25 @@ type nutanixCluster struct {
 	insecure bool
 }
 
+type karbonClusterList struct {
+	KubeapiServerIpv4Address string `json:"kubeapi_server_ipv4_address"`
+	Name                     string `json:"name"`
+	Status                   string `json:"status"`
+	UUID                     string `json:"uuid"`
+	Version                  string `json:"version"`
+}
+
+type kubeConfig struct {
+	KubeConfig string `json:"kube_config"`
+}
+
+type sshConfig struct {
+	Certificate string `json:"certificate"`
+	ExpiryTime  string `json:"expiry_time"`
+	PrivateKey  string `json:"private_key"`
+	Username    string `json:"username"`
+}
+
 func (nutanix *nutanixCluster) selectCluster() (string, error) {
 	clusters, err := nutanix.listKarbonClusters()
 	if err != nil {
@@ -54,8 +73,7 @@ func (nutanix *nutanixCluster) selectCluster() (string, error) {
 
 	clustersList := []string{}
 	for _, cluster := range clusters {
-		clustersList = append(clustersList, cluster["name"].(string))
-		// fmt.Fprintf(w, "\n%s\tv%s\t%s\t", cluster["name"], cluster["version"], cluster["status"].(string)[1:])
+		clustersList = append(clustersList, cluster.Name)
 	}
 
 	prompt := promptui.Select{
@@ -73,7 +91,7 @@ func (nutanix *nutanixCluster) selectCluster() (string, error) {
 	return result, nil
 }
 
-func (nutanix *nutanixCluster) listKarbonClusters() ([]map[string]interface{}, error) {
+func (nutanix *nutanixCluster) listKarbonClusters() ([]karbonClusterList, error) {
 
 	karbonListUrl := "/karbon/v1-beta.1/k8s/clusters"
 	method := "GET"
@@ -85,7 +103,7 @@ func (nutanix *nutanixCluster) listKarbonClusters() ([]map[string]interface{}, e
 	ResponseJSON, err := nutanix.clusterRequest(method, karbonListUrl, nil)
 	cobra.CheckErr(err)
 
-	var clusters []map[string]interface{}
+	var clusters []karbonClusterList
 
 	err = json.Unmarshal([]byte(ResponseJSON), &clusters)
 	if err != nil {
@@ -95,10 +113,10 @@ func (nutanix *nutanixCluster) listKarbonClusters() ([]map[string]interface{}, e
 	return clusters, nil
 }
 
-func saveKeyFile(cluster string, sshResponseJSON map[string]interface{}, force bool) error {
+func saveKeyFile(cluster string, ssh sshConfig, force bool) error {
 
-	privateKey := []byte(sshResponseJSON["private_key"].(string))
-	certificate := []byte(sshResponseJSON["certificate"].(string))
+	privateKey := []byte(ssh.PrivateKey)
+	certificate := []byte(ssh.Certificate)
 
 	userHomeDir, err := os.UserHomeDir()
 	cobra.CheckErr(err)
@@ -167,11 +185,11 @@ func deleteKeyFile(cluster string) error {
 	return nil
 }
 
-func addKeyAgent(cluster string, sshResponseJSON map[string]interface{}) error {
+func addKeyAgent(cluster string, ssh sshConfig) error {
 
-	expiryTime := sshResponseJSON["expiry_time"].(string)
-	privateKey := []byte(sshResponseJSON["private_key"].(string))
-	certificate := []byte(sshResponseJSON["certificate"].(string))
+	expiryTime := ssh.ExpiryTime
+	privateKey := []byte(ssh.PrivateKey)
+	certificate := []byte(ssh.Certificate)
 
 	// Get the ssh agent
 	socket := os.Getenv("SSH_AUTH_SOCK")
@@ -334,10 +352,6 @@ func (c *nutanixCluster) clusterRequest(method string, path string, payload []by
 	if err != nil {
 		return nil, err
 	}
-
-	// var ResponseJSON map[string]interface{}
-
-	// json.Unmarshal([]byte(body), &ResponseJSON)
 
 	return body, nil
 }

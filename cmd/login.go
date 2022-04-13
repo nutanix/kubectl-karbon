@@ -79,12 +79,10 @@ If option enabled retrieve SSH key/cert and add them to ssh-agent or in file in 
 		kubeconfigResponseJSON, err := nutanixCluster.clusterRequest(method, karbonKubeconfigPath, nil)
 		cobra.CheckErr(err)
 
-		var kubeconfigResponse map[string]interface{}
+		var kubeconfigResponse kubeConfig
 
 		err = json.Unmarshal([]byte(kubeconfigResponseJSON), &kubeconfigResponse)
 		cobra.CheckErr(err)
-
-		data := []byte(kubeconfigResponse["kube_config"].(string))
 
 		kubeconfig := viper.GetString("kubeconfig")
 
@@ -113,7 +111,7 @@ If option enabled retrieve SSH key/cert and add them to ssh-agent or in file in 
 			cobra.CheckErr(fmt.Errorf("file %s already exist, use force option to overwrite it", kubeconfig))
 		}
 
-		err = ioutil.WriteFile(kubeconfig, data, 0600)
+		err = ioutil.WriteFile(kubeconfig, []byte(kubeconfigResponse.KubeConfig), 0600)
 		cobra.CheckErr(err)
 
 		if verbose {
@@ -132,7 +130,7 @@ If option enabled retrieve SSH key/cert and add them to ssh-agent or in file in 
 		karbonSSHJSON, err := nutanixCluster.clusterRequest(method, karbonSSHPath, nil)
 		cobra.CheckErr(err)
 
-		var karbonSSH map[string]interface{}
+		var karbonSSH sshConfig
 
 		err = json.Unmarshal([]byte(karbonSSHJSON), &karbonSSH)
 		cobra.CheckErr(err)
