@@ -84,6 +84,7 @@ cluster: karbon_cluster_name
 user: admin
 insecure: true
 verbose: false
+force: false
 kubie: false
 #ssh-agent: false
 #ssh-file: false
@@ -104,6 +105,7 @@ you can also use the following environement variable
 `KARBON_USER`  
 `KARBON_INSECURE`  
 `KARBON_VERBOSE`  
+`KARBON_FORCE`  
 `KARBON_PASSWORD`  
 `KARBON_KUBIE`  
 `KARBON_KUBIE_PATH`  
@@ -114,6 +116,10 @@ you can also use the following environement variable
 precedence is
 
 `FLAGS` => `ENV` => `CONFIG FILE` => `DEFAULT`
+
+## File overwrite
+
+You can use the `--force` option to overwrite any existing file(s) like kubeconfig or ssh key/cert.
 
 ## Password
 
