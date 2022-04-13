@@ -40,7 +40,14 @@ var listCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 
-		clusters, err := listClusters(cmd)
+		nutanixCluster, err := newNutanixCluster()
+		if err != nil {
+			fmt.Println(err)
+			cmd.Usage()
+			return
+		}
+
+		clusters, err := nutanixCluster.listKarbonClusters()
 		cobra.CheckErr(err)
 
 		w := new(tabwriter.Writer)

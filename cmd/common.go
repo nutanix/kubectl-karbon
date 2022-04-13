@@ -46,14 +46,13 @@ type nutanixCluster struct {
 	insecure bool
 }
 
-func selectCluster(cmd *cobra.Command) (string, error) {
-	clusters, err := listClusters(cmd)
+func (nutanix *nutanixCluster) selectCluster() (string, error) {
+	clusters, err := nutanix.listKarbonClusters()
 	if err != nil {
 		return "", err
 	}
 
 	clustersList := []string{}
-
 	for _, cluster := range clusters {
 		clustersList = append(clustersList, cluster["name"].(string))
 		// fmt.Fprintf(w, "\n%s\tv%s\t%s\t", cluster["name"], cluster["version"], cluster["status"].(string)[1:])
@@ -74,58 +73,24 @@ func selectCluster(cmd *cobra.Command) (string, error) {
 	return result, nil
 }
 
-func listClusters(cmd *cobra.Command) ([]map[string]interface{}, error) {
-	server := viper.GetString("server")
-	if server == "" {
-		// fmt.Fprintln(os.Stderr, "Error: required flag(s) \"server\" not set")
-		cmd.Usage()
-		return nil, fmt.Errorf("Error: required flag(s) \"server\" not set")
-	}
+func (nutanix *nutanixCluster) listKarbonClusters() ([]map[string]interface{}, error) {
 
-	port := viper.GetInt("port")
-
-	karbonListUrl := fmt.Sprintf("https://%s:%d/karbon/v1-beta.1/k8s/clusters", server, port)
+	karbonListUrl := fmt.Sprintf("/karbon/v1-beta.1/k8s/clusters")
 	method := "GET"
 
 	if verbose {
-		fmt.Printf("Connect on https://%s:%d/ and retrieve cluster list\n", server, port)
+		fmt.Printf("Retrieve cluster list\n")
 	}
 
-	insecureSkipVerify := viper.GetBool("insecure")
-
-	customTransport := http.DefaultTransport.(*http.Transport).Clone()
-	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: insecureSkipVerify}
-
-	timeout, _ := cmd.Flags().GetInt("request-timeout")
-	client := &http.Client{Transport: customTransport, Timeout: time.Second * time.Duration(timeout)}
-	req, err := http.NewRequest(method, karbonListUrl, nil)
+	ResponseJSON, err := nutanix.clusterRequest(method, karbonListUrl, nil)
 	cobra.CheckErr(err)
 
-	userArg, password := getCredentials()
+	var clusters []map[string]interface{}
 
-	req.SetBasicAuth(userArg, password)
-
-	res, err := client.Do(req)
-	cobra.CheckErr(err)
-
-	defer res.Body.Close()
-
-	switch res.StatusCode {
-	case 401:
-		// fmt.Println("Invalid client credentials")
-		return nil, fmt.Errorf("Invalid client credentials")
-	case 200:
-		// OK
-	default:
-		// fmt.Println("Internal Error")
-		return nil, fmt.Errorf("Internal Error")
+	err = json.Unmarshal([]byte(ResponseJSON), &clusters)
+	if err != nil {
+		return nil, err
 	}
-
-	body, err := ioutil.ReadAll(res.Body)
-	cobra.CheckErr(err)
-
-	clusters := make([]map[string]interface{}, 0)
-	json.Unmarshal([]byte(body), &clusters)
 
 	return clusters, nil
 }
@@ -322,7 +287,7 @@ func newNutanixCluster() (*nutanixCluster, error) {
 	return &c, nil
 }
 
-func nutanixClusterRequest(c *nutanixCluster, method string, path string, payload []byte) (map[string]interface{}, error) {
+func (c *nutanixCluster) clusterRequest(method string, path string, payload []byte) ([]byte, error) {
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()
 	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: c.insecure}
 
@@ -354,16 +319,13 @@ func nutanixClusterRequest(c *nutanixCluster, method string, path string, payloa
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
-
 	if err != nil {
 		return nil, err
 	}
 
-	var ResponseJSON map[string]interface{}
+	// var ResponseJSON map[string]interface{}
 
-	// fmt.Println(string(body))
-	json.Unmarshal([]byte(body), &ResponseJSON)
-	// fmt.Printf(kubeconfigResponseJSON["kube_config"].(string))
+	// json.Unmarshal([]byte(body), &ResponseJSON)
 
-	return ResponseJSON, nil
+	return body, nil
 }
