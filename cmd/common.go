@@ -29,6 +29,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/manifoldco/promptui"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh"
@@ -43,6 +44,55 @@ type nutanixCluster struct {
 	port     int
 	timeout  int
 	insecure bool
+}
+
+func (nutanix *nutanixCluster) selectCluster() (string, error) {
+	clusters, err := nutanix.listKarbonClusters()
+	if err != nil {
+		return "", err
+	}
+
+	clustersList := []string{}
+	for _, cluster := range clusters {
+		clustersList = append(clustersList, cluster["name"].(string))
+		// fmt.Fprintf(w, "\n%s\tv%s\t%s\t", cluster["name"], cluster["version"], cluster["status"].(string)[1:])
+	}
+
+	prompt := promptui.Select{
+		Label: "Select a Cluster",
+		Items: clustersList,
+	}
+
+	_, result, err := prompt.Run()
+
+	if err != nil {
+		fmt.Printf("Prompt failed %v\n", err)
+		return "", err
+	}
+
+	return result, nil
+}
+
+func (nutanix *nutanixCluster) listKarbonClusters() ([]map[string]interface{}, error) {
+
+	karbonListUrl := "/karbon/v1-beta.1/k8s/clusters"
+	method := "GET"
+
+	if verbose {
+		fmt.Printf("Retrieve cluster list\n")
+	}
+
+	ResponseJSON, err := nutanix.clusterRequest(method, karbonListUrl, nil)
+	cobra.CheckErr(err)
+
+	var clusters []map[string]interface{}
+
+	err = json.Unmarshal([]byte(ResponseJSON), &clusters)
+	if err != nil {
+		return nil, err
+	}
+
+	return clusters, nil
 }
 
 func saveKeyFile(cluster string, sshResponseJSON map[string]interface{}) error {
@@ -237,7 +287,7 @@ func newNutanixCluster() (*nutanixCluster, error) {
 	return &c, nil
 }
 
-func nutanixClusterRequest(c *nutanixCluster, method string, path string, payload []byte) (map[string]interface{}, error) {
+func (c *nutanixCluster) clusterRequest(method string, path string, payload []byte) ([]byte, error) {
 	customTransport := http.DefaultTransport.(*http.Transport).Clone()
 	customTransport.TLSClientConfig = &tls.Config{InsecureSkipVerify: c.insecure}
 
@@ -269,16 +319,13 @@ func nutanixClusterRequest(c *nutanixCluster, method string, path string, payloa
 	}
 
 	body, err := ioutil.ReadAll(res.Body)
-
 	if err != nil {
 		return nil, err
 	}
 
-	var ResponseJSON map[string]interface{}
+	// var ResponseJSON map[string]interface{}
 
-	// fmt.Println(string(body))
-	json.Unmarshal([]byte(body), &ResponseJSON)
-	// fmt.Printf(kubeconfigResponseJSON["kube_config"].(string))
+	// json.Unmarshal([]byte(body), &ResponseJSON)
 
-	return ResponseJSON, nil
+	return body, nil
 }

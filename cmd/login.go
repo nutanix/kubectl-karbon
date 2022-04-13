@@ -17,6 +17,7 @@ limitations under the License.
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -49,18 +50,20 @@ If option enabled retrieve SSH key/cert and add them to ssh-agent or in file in 
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 
-		karbonCluster := viper.GetString("cluster")
-		if karbonCluster == "" {
-			fmt.Fprintln(os.Stderr, "Error: required flag \"cluster\" not set")
-			cmd.Usage()
-			return
-		}
-
 		nutanixCluster, err := newNutanixCluster()
 		if err != nil {
 			fmt.Println(err)
 			cmd.Usage()
 			return
+		}
+
+		karbonCluster := viper.GetString("cluster")
+		if karbonCluster == "" {
+			// fmt.Fprintln(os.Stderr, "Error: required flag \"cluster\" not set")
+			// cmd.Usage()
+			// return
+			karbonCluster, err = nutanixCluster.selectCluster()
+			cobra.CheckErr(err)
 		}
 
 		//  Kubeconfig management section
@@ -72,10 +75,15 @@ If option enabled retrieve SSH key/cert and add them to ssh-agent or in file in 
 		karbonKubeconfigPath := fmt.Sprintf("/karbon/v1/k8s/clusters/%s/kubeconfig", karbonCluster)
 		method := "GET"
 
-		kubeconfigResponseJSON, err := nutanixClusterRequest(nutanixCluster, method, karbonKubeconfigPath, nil)
+		kubeconfigResponseJSON, err := nutanixCluster.clusterRequest(method, karbonKubeconfigPath, nil)
 		cobra.CheckErr(err)
 
-		data := []byte(kubeconfigResponseJSON["kube_config"].(string))
+		var kubeconfigResponse map[string]interface{}
+
+		err = json.Unmarshal([]byte(kubeconfigResponseJSON), &kubeconfigResponse)
+		cobra.CheckErr(err)
+
+		data := []byte(kubeconfigResponse["kube_config"].(string))
 
 		kubeconfig := viper.GetString("kubeconfig")
 
@@ -115,16 +123,21 @@ If option enabled retrieve SSH key/cert and add them to ssh-agent or in file in 
 			fmt.Printf("Connect on https://%s:%d/ and retrieve SSH key/cert for cluster %s\n", nutanixCluster.server, nutanixCluster.port, karbonCluster)
 		}
 
-		karbonSSHJSON, err := nutanixClusterRequest(nutanixCluster, method, karbonSSHPath, nil)
+		karbonSSHJSON, err := nutanixCluster.clusterRequest(method, karbonSSHPath, nil)
+		cobra.CheckErr(err)
+
+		var karbonSSH map[string]interface{}
+
+		err = json.Unmarshal([]byte(karbonSSHJSON), &karbonSSH)
 		cobra.CheckErr(err)
 
 		if viper.GetBool("ssh-file") {
-			err = saveKeyFile(karbonCluster, karbonSSHJSON)
+			err = saveKeyFile(karbonCluster, karbonSSH)
 			cobra.CheckErr(err)
 		}
 
 		if viper.GetBool("ssh-agent") {
-			err = addKeyAgent(karbonCluster, karbonSSHJSON)
+			err = addKeyAgent(karbonCluster, karbonSSH)
 			cobra.CheckErr(err)
 		}
 
