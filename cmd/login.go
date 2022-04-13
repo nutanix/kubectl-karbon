@@ -47,6 +47,7 @@ If option enabled retrieve SSH key/cert and add them to ssh-agent or in file in 
 		viper.BindPFlag("kubie-path", cmd.Flags().Lookup("kubie-path"))
 		viper.BindPFlag("ssh-agent", cmd.Flags().Lookup("ssh-agent"))
 		viper.BindPFlag("ssh-file", cmd.Flags().Lookup("ssh-file"))
+		viper.BindPFlag("force", cmd.Flags().Lookup("force"))
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -107,6 +108,11 @@ If option enabled retrieve SSH key/cert and add them to ssh-agent or in file in 
 			cobra.CheckErr(err)
 		}
 
+		_, err = os.Stat(kubeconfig)
+		if err == nil && !viper.GetBool("force") {
+			cobra.CheckErr(fmt.Errorf("file %s already exist, use force option to overwrite it", kubeconfig))
+		}
+
 		err = ioutil.WriteFile(kubeconfig, data, 0600)
 		cobra.CheckErr(err)
 
@@ -132,7 +138,7 @@ If option enabled retrieve SSH key/cert and add them to ssh-agent or in file in 
 		cobra.CheckErr(err)
 
 		if viper.GetBool("ssh-file") {
-			err = saveKeyFile(karbonCluster, karbonSSH)
+			err = saveKeyFile(karbonCluster, karbonSSH, viper.GetBool("force"))
 			cobra.CheckErr(err)
 		}
 
@@ -163,6 +169,8 @@ func init() {
 	loginCmd.Flags().Int("port", 9440, "Port to run Application server on")
 
 	loginCmd.Flags().BoolP("insecure", "k", false, "Skip certificate verification (this is insecure)")
+
+	loginCmd.Flags().Bool("force", false, "Overwrite file(s) if already exist")
 
 	loginCmd.Flags().Bool("kubie", false, "Store kubeconfig in independent file in kubie-path directory")
 

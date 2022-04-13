@@ -95,7 +95,7 @@ func (nutanix *nutanixCluster) listKarbonClusters() ([]map[string]interface{}, e
 	return clusters, nil
 }
 
-func saveKeyFile(cluster string, sshResponseJSON map[string]interface{}) error {
+func saveKeyFile(cluster string, sshResponseJSON map[string]interface{}, force bool) error {
 
 	privateKey := []byte(sshResponseJSON["private_key"].(string))
 	certificate := []byte(sshResponseJSON["certificate"].(string))
@@ -111,11 +111,23 @@ func saveKeyFile(cluster string, sshResponseJSON map[string]interface{}) error {
 
 	// Write the private key
 	privateKeyFile := filepath.Join(sshDir, cluster)
+
+	_, err = os.Stat(privateKeyFile)
+	if err == nil && !force {
+		return fmt.Errorf("file %s already exist, use force option to overwrite it", privateKeyFile)
+	}
+
 	err = ioutil.WriteFile(privateKeyFile, privateKey, 0600)
 	cobra.CheckErr(err)
 
 	// Write the certificate
 	certificateFile := filepath.Join(sshDir, fmt.Sprintf("%s-cert.pub", cluster))
+
+	_, err = os.Stat(certificateFile)
+	if err == nil && !force {
+		return fmt.Errorf("file %s already exist, use force option to overwrite it", certificateFile)
+	}
+
 	err = ioutil.WriteFile(certificateFile, certificate, 0600)
 	cobra.CheckErr(err)
 
