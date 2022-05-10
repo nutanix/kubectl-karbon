@@ -60,9 +60,6 @@ If option enabled retrieve SSH key/cert and add them to ssh-agent or in file in 
 
 		karbonCluster := viper.GetString("cluster")
 		if karbonCluster == "" {
-			// fmt.Fprintln(os.Stderr, "Error: required flag \"cluster\" not set")
-			// cmd.Usage()
-			// return
 			karbonCluster, err = nutanixCluster.selectCluster()
 			cobra.CheckErr(err)
 		}

@@ -29,7 +29,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/manifoldco/promptui"
+	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/ssh"
@@ -46,12 +46,15 @@ type nutanixCluster struct {
 	insecure bool
 }
 
-type karbonClusterList struct {
+type karbonCluster struct {
 	KubeapiServerIpv4Address string `json:"kubeapi_server_ipv4_address"`
 	Name                     string `json:"name"`
 	Status                   string `json:"status"`
 	UUID                     string `json:"uuid"`
 	Version                  string `json:"version"`
+	MasterConfig             struct {
+		DeploymentType string `json:"deployment_type"`
+	} `json:"master_config"`
 }
 
 type kubeConfig struct {
@@ -71,27 +74,34 @@ func (nutanix *nutanixCluster) selectCluster() (string, error) {
 		return "", err
 	}
 
-	clustersList := []string{}
-	for _, cluster := range clusters {
-		clustersList = append(clustersList, cluster.Name)
-	}
-
-	prompt := promptui.Select{
-		Label: "Select a Cluster",
-		Items: clustersList,
-	}
-
-	_, result, err := prompt.Run()
+	idx, err := fuzzyfinder.Find(
+		clusters,
+		func(i int) string {
+			return clusters[i].Name
+		},
+		fuzzyfinder.WithPreviewWindow(func(i, w, h int) string {
+			if i == -1 {
+				return ""
+			}
+			return fmt.Sprintf("%s\n\n      status: %s\n     version: %s\nAPI endpoint: %s\n        type: %s\n        uuid: %s",
+				clusters[i].Name,
+				clusters[i].Status[1:],
+				clusters[i].Version,
+				clusters[i].KubeapiServerIpv4Address,
+				clusters[i].MasterConfig.DeploymentType,
+				clusters[i].UUID)
+		}),
+	)
 
 	if err != nil {
 		fmt.Printf("Prompt failed %v\n", err)
 		return "", err
 	}
 
-	return result, nil
+	return clusters[idx].Name, nil
 }
 
-func (nutanix *nutanixCluster) listKarbonClusters() ([]karbonClusterList, error) {
+func (nutanix *nutanixCluster) listKarbonClusters() ([]karbonCluster, error) {
 
 	karbonListUrl := "/karbon/v1-beta.1/k8s/clusters"
 	method := "GET"
@@ -103,7 +113,7 @@ func (nutanix *nutanixCluster) listKarbonClusters() ([]karbonClusterList, error)
 	ResponseJSON, err := nutanix.clusterRequest(method, karbonListUrl, nil)
 	cobra.CheckErr(err)
 
-	var clusters []karbonClusterList
+	var clusters []karbonCluster
 
 	err = json.Unmarshal([]byte(ResponseJSON), &clusters)
 	if err != nil {
