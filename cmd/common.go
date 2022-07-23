@@ -292,7 +292,7 @@ func unmarshalCert(bytes []byte) (*ssh.Certificate, error) {
 	return cert, nil
 }
 
-func getCredentials() (string, string) {
+func getCredentials(server string) (string, string) {
 	userArg := viper.GetString("user")
 	keyringFlag := viper.GetBool("keyring")
 
@@ -302,7 +302,7 @@ func getCredentials() (string, string) {
 	password, ok = os.LookupEnv("KARBON_PASSWORD")
 
 	if keyringFlag {
-		password, err = keyring.Get("kubectl-karbon", userArg)
+		password, err = keyring.Get("kubectl-karbon "+server, userArg)
 		if err == keyring.ErrNotFound && verbose {
 			fmt.Printf("No password found in keyring for user %s\n", userArg)
 		}
@@ -319,15 +319,15 @@ func getCredentials() (string, string) {
 		password = string(bytePassword)
 
 		if keyringFlag {
-			err = savePasswordKeyring(userArg, password)
+			err = savePasswordKeyring(server, userArg, password)
 			cobra.CheckErr(err)
 		}
 	}
 	return userArg, password
 }
 
-func savePasswordKeyring(user string, password string) error {
-	err := keyring.Set("kubectl-karbon", user, password)
+func savePasswordKeyring(server string, user string, password string) error {
+	err := keyring.Set("kubectl-karbon "+server, user, password)
 	if err != nil {
 		return err
 	}
@@ -337,13 +337,13 @@ func savePasswordKeyring(user string, password string) error {
 	return nil
 }
 
-func deletePasswordKeyring(user string) error {
-	err := keyring.Delete("kubectl-karbon", user)
+func deletePasswordKeyring(c *nutanixCluster) error {
+	err := keyring.Delete("kubectl-karbon "+c.server, c.login)
 	if err != nil {
 		return err
 	}
 	if verbose {
-		fmt.Printf("Password deleted from keyring for user %s\n", user)
+		fmt.Printf("Password deleted from keyring for user %s\n", c.login)
 	}
 	return nil
 }
@@ -354,7 +354,7 @@ func newNutanixCluster() (*nutanixCluster, error) {
 		return nil, fmt.Errorf("error: required flag \"server\" not set")
 	}
 
-	userArg, password := getCredentials()
+	userArg, password := getCredentials(server)
 
 	c := nutanixCluster{
 		server:   server,
@@ -390,7 +390,7 @@ func (c *nutanixCluster) clusterRequest(method string, path string, payload []by
 	switch res.StatusCode {
 	case 401:
 		if viper.GetBool("keyring") {
-			err = deletePasswordKeyring(c.login)
+			err = deletePasswordKeyring(c)
 			cobra.CheckErr(err)
 		}
 		return nil, fmt.Errorf("invalid client credentials")
