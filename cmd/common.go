@@ -32,6 +32,7 @@ import (
 	"github.com/ktr0731/go-fuzzyfinder"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"github.com/zalando/go-keyring"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 	"golang.org/x/term"
@@ -293,10 +294,22 @@ func unmarshalCert(bytes []byte) (*ssh.Certificate, error) {
 
 func getCredentials() (string, string) {
 	userArg := viper.GetString("user")
+	keyringFlag := viper.GetBool("keyring")
 
 	var password string
 	var ok bool
+	var err error
 	password, ok = os.LookupEnv("KARBON_PASSWORD")
+
+	if keyringFlag {
+		password, err = keyring.Get("kubectl-karbon", userArg)
+		if err == keyring.ErrNotFound && verbose {
+			fmt.Printf("No password found in keyring for user %s\n", userArg)
+		}
+		if err == nil {
+			ok = true
+		}
+	}
 
 	if !ok {
 		fmt.Printf("Enter %s password:\n", userArg)
@@ -304,8 +317,35 @@ func getCredentials() (string, string) {
 		cobra.CheckErr(err)
 
 		password = string(bytePassword)
+
+		if keyringFlag {
+			err = savePasswordKeyring(userArg, password)
+			cobra.CheckErr(err)
+		}
 	}
 	return userArg, password
+}
+
+func savePasswordKeyring(user string, password string) error {
+	err := keyring.Set("kubectl-karbon", user, password)
+	if err != nil {
+		return err
+	}
+	if verbose {
+		fmt.Printf("Password saved in keyring for user %s\n", user)
+	}
+	return nil
+}
+
+func deletePasswordKeyring(user string) error {
+	err := keyring.Delete("kubectl-karbon", user)
+	if err != nil {
+		return err
+	}
+	if verbose {
+		fmt.Printf("Password deleted from keyring for user %s\n", user)
+	}
+	return nil
 }
 
 func newNutanixCluster() (*nutanixCluster, error) {
@@ -349,6 +389,10 @@ func (c *nutanixCluster) clusterRequest(method string, path string, payload []by
 
 	switch res.StatusCode {
 	case 401:
+		if viper.GetBool("keyring") {
+			err = deletePasswordKeyring(c.login)
+			cobra.CheckErr(err)
+		}
 		return nil, fmt.Errorf("invalid client credentials")
 	case 404:
 		return nil, fmt.Errorf("karbon cluster not found")
