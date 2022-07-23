@@ -86,6 +86,7 @@ insecure: true
 verbose: false
 force: false
 kubie: false
+keyring: false
 #ssh-agent: false
 #ssh-file: false
 #kubie-path: ~/.kube/.kubie/
@@ -111,6 +112,7 @@ you can also use the following environement variable
 `KARBON_KUBIE_PATH`  
 `KARBON_SSH_AGENT`  
 `KARBON_SSH_FILE`  
+`KARBON_KEYRING`
 `KUBECONFIG`
 
 precedence is
@@ -123,7 +125,10 @@ You can use the `--force` option to overwrite any existing file(s) like kubeconf
 
 ## Password
 
-This tools never stored the password. You can use the `KARBON_PASSWORD` env variable otherwise it should be provided in an interactive way.
+By default this tools never stored the password.  
+You can use the `KARBON_PASSWORD` env variable.  
+You can also use the `--keyring` option to save and retrieve your password from the system keyring. It supports OS X, Linux/BSD (dbus) and Windows.  
+In all other cases password should be provided in an interactive way.
 
 ## SSH option
 

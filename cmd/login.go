@@ -48,6 +48,7 @@ If option enabled retrieve SSH key/cert and add them to ssh-agent or in file in 
 		viper.BindPFlag("ssh-agent", cmd.Flags().Lookup("ssh-agent"))
 		viper.BindPFlag("ssh-file", cmd.Flags().Lookup("ssh-file"))
 		viper.BindPFlag("force", cmd.Flags().Lookup("force"))
+		viper.BindPFlag("keyring", cmd.Flags().Lookup("keyring"))
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -168,6 +169,8 @@ func init() {
 	loginCmd.Flags().Bool("force", false, "Overwrite file(s) if already exist")
 
 	loginCmd.Flags().Bool("kubie", false, "Store kubeconfig in independent file in kubie-path directory")
+
+	loginCmd.Flags().Bool("keyring", false, "Use keyring to store and retrieve credential")
 
 	userHomeDir, err := os.UserHomeDir()
 	cobra.CheckErr(err)
