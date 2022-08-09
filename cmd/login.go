@@ -19,7 +19,6 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -109,7 +108,7 @@ If option enabled retrieve SSH key/cert and add them to ssh-agent or in file in 
 			cobra.CheckErr(fmt.Errorf("file %s already exist, use force option to overwrite it", kubeconfig))
 		}
 
-		err = ioutil.WriteFile(kubeconfig, []byte(kubeconfigResponse.KubeConfig), 0600)
+		err = os.WriteFile(kubeconfig, []byte(kubeconfigResponse.KubeConfig), 0600)
 		cobra.CheckErr(err)
 
 		if verbose {

@@ -21,7 +21,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net"
 	"net/http"
 	"os"
@@ -146,7 +146,7 @@ func saveKeyFile(cluster string, ssh sshConfig, force bool) error {
 		return fmt.Errorf("file %s already exist, use force option to overwrite it", privateKeyFile)
 	}
 
-	err = ioutil.WriteFile(privateKeyFile, privateKey, 0600)
+	err = os.WriteFile(privateKeyFile, privateKey, 0600)
 	cobra.CheckErr(err)
 
 	// Write the certificate
@@ -157,7 +157,7 @@ func saveKeyFile(cluster string, ssh sshConfig, force bool) error {
 		return fmt.Errorf("file %s already exist, use force option to overwrite it", certificateFile)
 	}
 
-	err = ioutil.WriteFile(certificateFile, certificate, 0600)
+	err = os.WriteFile(certificateFile, certificate, 0600)
 	cobra.CheckErr(err)
 
 	if verbose {
@@ -402,7 +402,7 @@ func (c *nutanixCluster) clusterRequest(method string, path string, payload []by
 		return nil, fmt.Errorf("internal Error")
 	}
 
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
