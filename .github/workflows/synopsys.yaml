@@ -4,7 +4,7 @@ on:
     branches:
       - main
   schedule:
-    - cron:  '0 0 * * *'
+    - cron: "0 0 * * *"
   push:
 
 jobs:
@@ -17,14 +17,15 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v3
         with:
-          go-version: '^1.17'
+          go-version: "^1.17"
 
-      - name: Build Project 
+      - name: Build Project
         run: make build
-      
+
       - name: Run Synopsys Detect
         uses: synopsys-sig/detect-action@v0.3.2
         with:
+          scan-mode: INTELLIGENT
           github-token: ${{ secrets.GITHUB_TOKEN }}
           detect-version: 7.9.0
           blackduck-url: ${{ secrets.BLACKDUCK_URL }}
