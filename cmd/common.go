@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -17,9 +17,7 @@ package cmd
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"encoding/json"
-	"encoding/pem"
 	"fmt"
 	"io"
 	"net"
@@ -196,11 +194,11 @@ func deleteKeyFile(cluster string) error {
 	return nil
 }
 
-func addKeyAgent(cluster string, ssh sshConfig) error {
+func addKeyAgent(cluster string, sshConfig sshConfig) error {
 
-	expiryTime := ssh.ExpiryTime
-	privateKey := []byte(ssh.PrivateKey)
-	certificate := []byte(ssh.Certificate)
+	expiryTime := sshConfig.ExpiryTime
+	privateKey := []byte(sshConfig.PrivateKey)
+	certificate := []byte(sshConfig.Certificate)
 
 	// Get the ssh agent
 	socket := os.Getenv("SSH_AUTH_SOCK")
@@ -214,8 +212,7 @@ func addKeyAgent(cluster string, ssh sshConfig) error {
 
 	agentClient := agent.NewClient(conn)
 
-	data, _ := pem.Decode(privateKey)
-	parsedKey, err := x509.ParsePKCS1PrivateKey(data.Bytes)
+	parsedKey, err := ssh.ParseRawPrivateKey(privateKey)
 	cobra.CheckErr(err)
 
 	sshCert, err := unmarshalCert(certificate)
