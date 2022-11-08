@@ -10,5 +10,5 @@ require (
 	github.com/spf13/viper v1.14.0
 	github.com/zalando/go-keyring v0.2.1
 	golang.org/x/crypto v0.0.0-20220722155217-630584e8d5aa
-	golang.org/x/term v0.1.0
+	golang.org/x/term v0.2.0
 )
