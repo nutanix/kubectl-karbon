@@ -6,7 +6,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -117,29 +117,32 @@ If option enabled retrieve SSH key/cert and add them to ssh-agent or in file in 
 
 		// SSH key/cert management section
 
-		karbonSSHPath := fmt.Sprintf("/karbon/v1/k8s/clusters/%s/ssh", karbonCluster)
-		method = "GET"
+		if viper.GetBool("ssh-agent") || viper.GetBool("ssh-file") {
 
-		if verbose {
-			fmt.Printf("Connect on https://%s:%d/ and retrieve SSH key/cert for cluster %s\n", nutanixCluster.server, nutanixCluster.port, karbonCluster)
-		}
+			karbonSSHPath := fmt.Sprintf("/karbon/v1/k8s/clusters/%s/ssh", karbonCluster)
+			method = "GET"
 
-		karbonSSHJSON, err := nutanixCluster.clusterRequest(method, karbonSSHPath, nil)
-		cobra.CheckErr(err)
+			if verbose {
+				fmt.Printf("Connect on https://%s:%d/ and retrieve SSH key/cert for cluster %s\n", nutanixCluster.server, nutanixCluster.port, karbonCluster)
+			}
 
-		var karbonSSH sshConfig
-
-		err = json.Unmarshal([]byte(karbonSSHJSON), &karbonSSH)
-		cobra.CheckErr(err)
-
-		if viper.GetBool("ssh-file") {
-			err = saveKeyFile(karbonCluster, karbonSSH, viper.GetBool("force"))
+			karbonSSHJSON, err := nutanixCluster.clusterRequest(method, karbonSSHPath, nil)
 			cobra.CheckErr(err)
-		}
 
-		if viper.GetBool("ssh-agent") {
-			err = addKeyAgent(karbonCluster, karbonSSH)
+			var karbonSSH sshConfig
+
+			err = json.Unmarshal([]byte(karbonSSHJSON), &karbonSSH)
 			cobra.CheckErr(err)
+
+			if viper.GetBool("ssh-file") {
+				err = saveKeyFile(karbonCluster, karbonSSH, viper.GetBool("force"))
+				cobra.CheckErr(err)
+			}
+
+			if viper.GetBool("ssh-agent") {
+				err = addKeyAgent(karbonCluster, karbonSSH)
+				cobra.CheckErr(err)
+			}
 		}
 
 		fmt.Printf("Logged successfully into %s cluster\n", karbonCluster)
