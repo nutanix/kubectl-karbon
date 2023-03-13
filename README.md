@@ -137,7 +137,7 @@ The key and cert can be added to the running ssh-agent (`--ssh-agent`) or saved 
 
 ## Kubie mode
 
-Allows full integration with the excellent [Kubie tool](https://blog.sbstp.ca/introducing-kubie/) who has support for split configuration files, meaning it can load Kubernetes contexts from multiple files.  
+Allows full integration with [Kube](https://github.com/funkolab/kube) or [Kubie](https://blog.sbstp.ca/introducing-kubie/) who have support for split configuration files, meaning it can load Kubernetes contexts from multiple files.  
 When this mode is active (`--kubie`) each kubeconfig file is stored as an independent file in the kubie-path directoy (default `~/.kube/kubie/cluster_name.yaml`)
 
 ## Building From Source
