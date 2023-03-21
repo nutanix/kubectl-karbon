@@ -85,6 +85,7 @@ user: admin
 insecure: true
 verbose: false
 force: false
+merge: false
 kubie: false
 keyring: false
 #ssh-agent: false
@@ -107,6 +108,7 @@ you can also use the following environement variable
 `KARBON_INSECURE`  
 `KARBON_VERBOSE`  
 `KARBON_FORCE`  
+`KARBON_MERGE`  
 `KARBON_PASSWORD`  
 `KARBON_KUBIE`  
 `KARBON_KUBIE_PATH`  
@@ -139,6 +141,18 @@ The key and cert can be added to the running ssh-agent (`--ssh-agent`) or saved 
 
 Allows full integration with [Kube](https://github.com/funkolab/kube) or [Kubie](https://blog.sbstp.ca/introducing-kubie/) who have support for split configuration files, meaning it can load Kubernetes contexts from multiple files.  
 When this mode is active (`--kubie`) each kubeconfig file is stored as an independent file in the kubie-path directoy (default `~/.kube/kubie/cluster_name.yaml`)
+
+## Merge Feature
+
+The `merge` feature allows you to add a new context to an existing `kubeconfig` file instead of overwriting it. This is useful when you have multiple Kubernetes clusters and want to manage them using the same `kubeconfig` file.
+
+### Usage
+
+To use the `merge` feature, simply pass the `--merge` flag when running the `login` command:
+
+```sh
+kubectl-karbon login --username <username> --password <password> --merge
+```
 
 ## Building From Source
 
