@@ -48,6 +48,7 @@ If option enabled retrieve SSH key/cert and add them to ssh-agent or in file in 
 		viper.BindPFlag("ssh-file", cmd.Flags().Lookup("ssh-file"))
 		viper.BindPFlag("force", cmd.Flags().Lookup("force"))
 		viper.BindPFlag("keyring", cmd.Flags().Lookup("keyring"))
+		viper.BindPFlag("merge", cmd.Flags().Lookup("merge"))
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 
@@ -103,16 +104,9 @@ If option enabled retrieve SSH key/cert and add them to ssh-agent or in file in 
 			cobra.CheckErr(err)
 		}
 
-		_, err = os.Stat(kubeconfig)
-		if err == nil && !viper.GetBool("force") {
-			cobra.CheckErr(fmt.Errorf("file %s already exist, use force option to overwrite it", kubeconfig))
-		}
-
-		err = os.WriteFile(kubeconfig, []byte(kubeconfigResponse.KubeConfig), 0600)
-		cobra.CheckErr(err)
-
-		if verbose {
-			fmt.Printf("Kubeconfig file %s successfully written\n", kubeconfig)
+		err = SaveKubeConfig(kubeconfig, &kubeconfigResponse)
+		if err != nil {
+			cobra.CheckErr(fmt.Errorf("failed to save kubeconfig: %w", err))
 		}
 
 		// SSH key/cert management section
@@ -173,6 +167,8 @@ func init() {
 	loginCmd.Flags().Bool("kubie", false, "Store kubeconfig in independent file in kubie-path directory")
 
 	loginCmd.Flags().Bool("keyring", false, "Use keyring to store and retrieve credential")
+
+	loginCmd.Flags().Bool("merge", false, "Use context feature for kubeconfig")
 
 	userHomeDir, err := os.UserHomeDir()
 	cobra.CheckErr(err)

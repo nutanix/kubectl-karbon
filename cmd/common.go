@@ -34,6 +34,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 	"golang.org/x/term"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 type nutanixCluster struct {
@@ -405,4 +406,68 @@ func (c *nutanixCluster) clusterRequest(method string, path string, payload []by
 	}
 
 	return body, nil
+}
+
+// SaveKubeConfig handles writing the kubeconfig to the file system.
+// It considers options like force and merge.
+func SaveKubeConfig(kubeconfig string, kubeconfigResponse *kubeConfig) error {
+	force := viper.GetBool("force")
+	merge := viper.GetBool("merge")
+	verbose := viper.GetBool("verbose")
+
+	_, err := os.Stat(kubeconfig)
+
+	if err == nil && merge {
+		return MergeKubeConfig(kubeconfig, kubeconfigResponse)
+	}
+
+	if err == nil && !force {
+		return fmt.Errorf("file %s already exists, use force option to overwrite it, or merge option to add the configuration as a new context", kubeconfig)
+	}
+
+	err = os.WriteFile(kubeconfig, []byte(kubeconfigResponse.KubeConfig), 0600)
+	if err != nil {
+		return fmt.Errorf("failed to write kubeconfig file: %w", err)
+	}
+
+	if verbose {
+		fmt.Printf("Kubeconfig file %s successfully written\n", kubeconfig)
+	}
+
+	return nil
+}
+
+// MergeKubeconfig merges an existing kubeconfig file with the new kubeconfig
+// from the API response.
+func MergeKubeConfig(kubeconfig string, kubeconfigResponse *kubeConfig) error {
+	existingKubeconfig, err := clientcmd.LoadFromFile(kubeconfig)
+	if err != nil {
+		return fmt.Errorf("failed to load existing kubeconfig: %w", err)
+	}
+
+	newKubeconfig, err := clientcmd.Load([]byte(kubeconfigResponse.KubeConfig))
+	if err != nil {
+		return fmt.Errorf("failed to load new kubeconfig: %w", err)
+	}
+
+	// Replace or add new contexts, clusters, and auth infos
+	for contextName, newContext := range newKubeconfig.Contexts {
+		existingKubeconfig.Contexts[contextName] = newContext
+	}
+	for clusterName, newCluster := range newKubeconfig.Clusters {
+		existingKubeconfig.Clusters[clusterName] = newCluster
+	}
+	for authInfoName, newAuthInfo := range newKubeconfig.AuthInfos {
+		existingKubeconfig.AuthInfos[authInfoName] = newAuthInfo
+	}
+
+	// Set the newKubeConfig's current context as the default context
+	existingKubeconfig.CurrentContext = newKubeconfig.CurrentContext
+
+	err = clientcmd.WriteToFile(*existingKubeconfig, kubeconfig)
+	if err != nil {
+		return fmt.Errorf("failed to write merged kubeconfig: %w", err)
+	}
+
+	return nil
 }
