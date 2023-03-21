@@ -12,9 +12,6 @@ builds:
     goarch:
       - amd64
       - arm64
-    ignore:
-      - goos: windows
-        goarch: arm64
     ldflags:
       - -s -w 
       - -X github.com/nutanix/kubectl-karbon/version.Version={{.Version}} 
