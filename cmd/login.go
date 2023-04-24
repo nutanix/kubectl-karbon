@@ -59,88 +59,89 @@ If option enabled retrieve SSH key/cert and add them to ssh-agent or in file in 
 			return
 		}
 
-		karbonCluster := viper.GetString("cluster")
-		if karbonCluster == "" {
-			karbonCluster, err = nutanixCluster.selectCluster()
+		karbonClusters := viper.GetStringSlice("cluster")
+
+		if len(karbonClusters) == 0 {
+			karbonClusters, err = nutanixCluster.selectCluster()
 			cobra.CheckErr(err)
 		}
 
-		//  Kubeconfig management section
-
-		if verbose {
-			fmt.Printf("Connect on https://%s:%d/ and retrieve Kubeconfig for cluster %s\n", nutanixCluster.server, nutanixCluster.port, karbonCluster)
-		}
-
-		karbonKubeconfigPath := fmt.Sprintf("/karbon/v1/k8s/clusters/%s/kubeconfig", karbonCluster)
-		method := "GET"
-
-		kubeconfigResponseJSON, err := nutanixCluster.clusterRequest(method, karbonKubeconfigPath, nil)
-		cobra.CheckErr(err)
-
-		var kubeconfigResponse kubeConfig
-
-		err = json.Unmarshal([]byte(kubeconfigResponseJSON), &kubeconfigResponse)
-		cobra.CheckErr(err)
-
-		kubeconfig := viper.GetString("kubeconfig")
-
-		if viper.GetBool("kubie") {
-			kubiePath := viper.GetString("kubie-path")
-			clusterFile := fmt.Sprintf("%s.yaml", karbonCluster)
-			kubeconfig = filepath.Join(kubiePath, clusterFile)
-		}
-
-		if strings.HasPrefix(kubeconfig, "~/") {
-			userHomeDir, err := os.UserHomeDir()
-			cobra.CheckErr(err)
-			kubeconfig = filepath.Join(userHomeDir, kubeconfig[2:])
-		}
-
-		kubeconfigPath := filepath.Dir(kubeconfig)
-		_, err = os.Stat(kubeconfigPath)
-
-		if os.IsNotExist(err) {
-			err := os.MkdirAll(kubeconfigPath, 0700)
-			cobra.CheckErr(err)
-		}
-
-		err = SaveKubeConfig(kubeconfig, &kubeconfigResponse)
-		if err != nil {
-			cobra.CheckErr(fmt.Errorf("failed to save kubeconfig: %w", err))
-		}
-
-		// SSH key/cert management section
-
-		if viper.GetBool("ssh-agent") || viper.GetBool("ssh-file") {
-
-			karbonSSHPath := fmt.Sprintf("/karbon/v1/k8s/clusters/%s/ssh", karbonCluster)
-			method = "GET"
-
+		for _, karbonCluster := range karbonClusters {
+			//  Kubeconfig management section
 			if verbose {
-				fmt.Printf("Connect on https://%s:%d/ and retrieve SSH key/cert for cluster %s\n", nutanixCluster.server, nutanixCluster.port, karbonCluster)
+				fmt.Printf("Connect on https://%s:%d/ and retrieve Kubeconfig for cluster %s\n", nutanixCluster.server, nutanixCluster.port, karbonCluster)
 			}
 
-			karbonSSHJSON, err := nutanixCluster.clusterRequest(method, karbonSSHPath, nil)
+			karbonKubeconfigPath := fmt.Sprintf("/karbon/v1/k8s/clusters/%s/kubeconfig", karbonCluster)
+			method := "GET"
+
+			kubeconfigResponseJSON, err := nutanixCluster.clusterRequest(method, karbonKubeconfigPath, nil)
 			cobra.CheckErr(err)
 
-			var karbonSSH sshConfig
+			var kubeconfigResponse kubeConfig
 
-			err = json.Unmarshal([]byte(karbonSSHJSON), &karbonSSH)
+			err = json.Unmarshal([]byte(kubeconfigResponseJSON), &kubeconfigResponse)
 			cobra.CheckErr(err)
 
-			if viper.GetBool("ssh-file") {
-				err = saveKeyFile(karbonCluster, karbonSSH, viper.GetBool("force"))
+			kubeconfig := viper.GetString("kubeconfig")
+
+			if viper.GetBool("kubie") {
+				kubiePath := viper.GetString("kubie-path")
+				clusterFile := fmt.Sprintf("%s.yaml", karbonCluster)
+				kubeconfig = filepath.Join(kubiePath, clusterFile)
+			}
+
+			if strings.HasPrefix(kubeconfig, "~/") {
+				userHomeDir, err := os.UserHomeDir()
+				cobra.CheckErr(err)
+				kubeconfig = filepath.Join(userHomeDir, kubeconfig[2:])
+			}
+
+			kubeconfigPath := filepath.Dir(kubeconfig)
+			_, err = os.Stat(kubeconfigPath)
+
+			if os.IsNotExist(err) {
+				err := os.MkdirAll(kubeconfigPath, 0700)
 				cobra.CheckErr(err)
 			}
 
-			if viper.GetBool("ssh-agent") {
-				err = addKeyAgent(karbonCluster, karbonSSH)
-				cobra.CheckErr(err)
+			err = SaveKubeConfig(kubeconfig, &kubeconfigResponse)
+			if err != nil {
+				cobra.CheckErr(fmt.Errorf("failed to save kubeconfig: %w", err))
 			}
+
+			// SSH key/cert management section
+
+			if viper.GetBool("ssh-agent") || viper.GetBool("ssh-file") {
+
+				karbonSSHPath := fmt.Sprintf("/karbon/v1/k8s/clusters/%s/ssh", karbonCluster)
+				method = "GET"
+
+				if verbose {
+					fmt.Printf("Connect on https://%s:%d/ and retrieve SSH key/cert for cluster %s\n", nutanixCluster.server, nutanixCluster.port, karbonCluster)
+				}
+
+				karbonSSHJSON, err := nutanixCluster.clusterRequest(method, karbonSSHPath, nil)
+				cobra.CheckErr(err)
+
+				var karbonSSH sshConfig
+
+				err = json.Unmarshal([]byte(karbonSSHJSON), &karbonSSH)
+				cobra.CheckErr(err)
+
+				if viper.GetBool("ssh-file") {
+					err = saveKeyFile(karbonCluster, karbonSSH, viper.GetBool("force"))
+					cobra.CheckErr(err)
+				}
+
+				if viper.GetBool("ssh-agent") {
+					err = addKeyAgent(karbonCluster, karbonSSH)
+					cobra.CheckErr(err)
+				}
+			}
+
+			fmt.Printf("Logged successfully into %s cluster\n", karbonCluster)
 		}
-
-		fmt.Printf("Logged successfully into %s cluster\n", karbonCluster)
-
 	},
 }
 
@@ -156,7 +157,9 @@ func init() {
 
 	loginCmd.Flags().StringP("user", "u", user.Username, "Username to authenticate")
 
-	loginCmd.Flags().String("cluster", "", "Karbon cluster to connect against")
+	var clusters []string
+
+	loginCmd.Flags().StringSliceVar(&clusters, "cluster", nil, "Karbon cluster(s) to connect to (multiple coma separated cluster names)")
 
 	loginCmd.Flags().Int("port", 9440, "Port to run Application server on")
 
