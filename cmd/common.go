@@ -68,13 +68,13 @@ type sshConfig struct {
 	Username    string `json:"username"`
 }
 
-func (nutanix *nutanixCluster) selectCluster() (string, error) {
+func (nutanix *nutanixCluster) selectCluster() ([]string, error) {
 	clusters, err := nutanix.listKarbonClusters()
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	idx, err := fuzzyfinder.Find(
+	idxs, err := fuzzyfinder.FindMulti(
 		clusters,
 		func(i int) string {
 			return clusters[i].Name
@@ -83,7 +83,8 @@ func (nutanix *nutanixCluster) selectCluster() (string, error) {
 			if i == -1 {
 				return ""
 			}
-			return fmt.Sprintf("%s\n\n      status: %s\n     version: %s\nAPI endpoint: %s\n        type: %s\n        uuid: %s",
+
+			return fmt.Sprintf("%s\n\n      status: %s\n     version: %s\nAPI endpoint: %s\n        type: %s\n        uuid: %s\n\n*** Press TAB key to select multiple clusters ***",
 				clusters[i].Name,
 				clusters[i].Status[1:],
 				clusters[i].Version,
@@ -95,10 +96,15 @@ func (nutanix *nutanixCluster) selectCluster() (string, error) {
 
 	if err != nil {
 		fmt.Printf("Prompt failed %v\n", err)
-		return "", err
+		return nil, err
 	}
 
-	return clusters[idx].Name, nil
+	var selectedClusters []string
+	for _, idx := range idxs {
+		selectedClusters = append(selectedClusters, clusters[idx].Name)
+	}
+
+	return selectedClusters, nil
 }
 
 func (nutanix *nutanixCluster) listKarbonClusters() ([]karbonCluster, error) {
