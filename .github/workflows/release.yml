@@ -26,4 +26,4 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         NUTANIX_BOT_PAT: ${{ secrets.NUTANIX_BOT_PAT }}
     - name: Update new version in krew-index
-      uses: rajatjindal/krew-release-bot@v0.0.43
+      uses: rajatjindal/krew-release-bot@v0.0.46
