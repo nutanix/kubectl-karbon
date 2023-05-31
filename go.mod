@@ -6,7 +6,7 @@ require (
 	github.com/ktr0731/go-fuzzyfinder v0.7.0
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
-	github.com/zalando/go-keyring v0.2.2
+	github.com/zalando/go-keyring v0.2.3
 	golang.org/x/crypto v0.9.0
 	golang.org/x/term v0.8.0
 )
@@ -38,7 +38,7 @@ require (
 
 require (
 	github.com/alessio/shellescape v1.4.1 // indirect
-	github.com/danieljoos/wincred v1.1.2 // indirect
+	github.com/danieljoos/wincred v1.2.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/gdamore/tcell/v2 v2.5.3 // indirect
