@@ -14,7 +14,7 @@ jobs:
       with:
         go-version: '^1.19'
     - name: Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Lint Go Code
       run: |
         go install honnef.co/go/tools/cmd/staticcheck@latest
@@ -29,7 +29,7 @@ jobs:
       with:
         go-version: '^1.19'
     - name: Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Vet Go code
       run: make vet
 
@@ -42,7 +42,7 @@ jobs:
       with:
         go-version: '^1.19'
     - name: Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
     - name: Test
       run: make test
 
@@ -57,7 +57,7 @@ jobs:
         go-version: '^1.19'
 
     - name: Checkout Code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: build
       run: make build
