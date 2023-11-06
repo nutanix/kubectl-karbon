@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/ktr0731/go-fuzzyfinder v0.7.0
-	github.com/spf13/cobra v1.7.0
+	github.com/spf13/cobra v1.8.0
 	github.com/spf13/viper v1.16.0
 	github.com/zalando/go-keyring v0.2.3
 	golang.org/x/crypto v0.14.0
