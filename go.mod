@@ -2,8 +2,6 @@ module github.com/nutanix/kubectl-karbon
 
 go 1.21
 
-toolchain go1.21.5
-
 require (
 	github.com/ktr0731/go-fuzzyfinder v0.8.0
 	github.com/spf13/cobra v1.8.0
