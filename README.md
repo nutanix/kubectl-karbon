@@ -5,7 +5,7 @@ It uses the Karbon API to get kubeconfig file and install it on your local syste
 
 ## Demo
 
-https://user-images.githubusercontent.com/180613/117446386-4d04f080-af3c-11eb-866d-282bc14ee97a.mp4
+https://github.com/nutanix/kubectl-karbon/assets/180613/392310a8-02e7-4aca-a9ea-1e50fddec682
 
 ---
 
