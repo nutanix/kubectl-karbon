@@ -29,6 +29,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           blackduck_scan_full: true
           blackduck_scan_failure_severities: 'BLOCKER,CRITICAL'
+          include_diagnostics: true
 
       - name: Black Duck PR Scan
         if: ${{ github.event_name == 'pull_request' }}
@@ -39,3 +40,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           blackduck_scan_full: false
           blackduck_prComment_enabled: true
+          include_diagnostics: true
