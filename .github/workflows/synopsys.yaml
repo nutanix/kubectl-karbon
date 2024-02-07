@@ -34,6 +34,8 @@ jobs:
       - name: Black Duck PR Scan
         if: ${{ github.event_name == 'pull_request' }}
         uses: synopsys-sig/synopsys-action@v1.6.0
+        env:
+          DETECT_PROJECT_VERSION_NAME: ${{ github.base_ref }}
         with:
           blackduck_url: ${{ secrets.BLACKDUCK_URL }}
           blackduck_token: ${{ secrets.BLACKDUCK_API_TOKEN }}
