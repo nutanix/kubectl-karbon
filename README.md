@@ -2,6 +2,7 @@
 
 This kubectl extension allows to quickly connect to an existing karbon cluster without the need to connect to Prism UI.
 It uses the Karbon API to get kubeconfig file and install it on your local system.
+The kubectl extension can be used on Linux, MacOS and Windows. 
 
 ## Demo
 
@@ -25,11 +26,13 @@ https://github.com/nutanix/kubectl-karbon/assets/180613/392310a8-02e7-4aca-a9ea-
 
 ## Installation
 
-There are several installation options:
+See the table below for all kubectl-karbon installation methods:
 
-- As kubectl Krew plugins
-- As Homebrew or Linuxbrew package
-- Manual installation
+| Installation method                               | Operating systems     |
+|---------------------------------------------------|-----------------------|
+| [Kubectl Krew Plugins](#kubectl-plugins)          | Linux, MacOS, Windows |
+| [Homebrew or Linuxbrew package](#homebrew-package)| Linux, MacOS          |
+| [Manual](#manual)                                 | Linux, MacOS, Windows |
 
 After installing, the tools will be available as `kubectl karbon`.
 
@@ -57,7 +60,7 @@ Keep up-to-date with `brew upgrade kubectl-karbon` (or brew upgrade to upgrade e
 ### Manual
 
  - Download your corresponding [release](https://github.com/nutanix/kubectl-karbon/releases)
- - Install the binary somewhere in your PATH (/usr/local/bin for example)
+ - Install the binary somewhere in your PATH (for example /usr/local/bin or Windows equivalent)
  - use it with `kubectl karbon`
 
 ***MacOS X notes for security error***
