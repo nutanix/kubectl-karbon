@@ -13,10 +13,10 @@ builds:
       - amd64
       - arm64
     ldflags:
-      - -s -w 
-      - -X github.com/nutanix/kubectl-karbon/version.Version={{.Version}} 
-      - -X github.com/nutanix/kubectl-karbon/version.Commit={{.ShortCommit}} 
-      - -X github.com/nutanix/kubectl-karbon/version.Date={{.Date}} 
+      - -s -w
+      - -X github.com/nutanix/kubectl-karbon/version.Version={{.Version}}
+      - -X github.com/nutanix/kubectl-karbon/version.Commit={{.ShortCommit}}
+      - -X github.com/nutanix/kubectl-karbon/version.Date={{.Date}}
       - -X github.com/nutanix/kubectl-karbon/version.BuiltBy=GoReleaser
       - -X github.com/nutanix/kubectl-karbon/version.OsName={{.Os}}
       - -X github.com/nutanix/kubectl-karbon/version.PlatformName={{.Arch}}
@@ -30,7 +30,7 @@ archives:
 # Homebrew
 brews:
   - name: kubectl-karbon
-    tap:
+    repository:
       owner: nutanix
       name: homebrew-tap
       branch: main
@@ -38,8 +38,8 @@ brews:
     commit_author:
       name: tuxtof
       email: christophe.jauffret@nutanix.com
-    folder: Formula
-    homepage: https://github.com/nutanix/kubectl-karbon 
+    directory: Formula
+    homepage: https://github.com/nutanix/kubectl-karbon
     description: Kubectl extension to quickly connect to an existing karbon cluster!
     test: |
       system "kubectl-karbon version"
