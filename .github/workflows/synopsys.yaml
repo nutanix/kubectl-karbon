@@ -4,6 +4,9 @@ on:
     branches:
       - main
   push:
+    branches:
+      - main
+      - 'release-*'
 
 jobs:
   security:
