@@ -28,11 +28,11 @@ https://github.com/nutanix/kubectl-karbon/assets/180613/392310a8-02e7-4aca-a9ea-
 
 See the table below for all kubectl-karbon installation methods:
 
-| Installation method                               | Operating systems     |
-|---------------------------------------------------|-----------------------|
-| [Kubectl Krew Plugins](#kubectl-plugins)          | Linux, MacOS, Windows |
-| [Homebrew or Linuxbrew package](#homebrew-package)| Linux, MacOS          |
-| [Manual](#manual)                                 | Linux, MacOS, Windows |
+| Installation method                                | Operating systems     |
+|----------------------------------------------------|-----------------------|
+| [Kubectl Krew Plugins](#kubectl-plugins)           | Linux, MacOS, Windows |
+| [Homebrew or Linuxbrew package](#homebrew-package) | Linux, MacOS          |
+| [Manual](#manual)                                  | Linux, MacOS, Windows |
 
 After installing, the tools will be available as `kubectl karbon`.
 
@@ -87,6 +87,7 @@ cluster: karbon_cluster_name
 user: admin
 insecure: true
 verbose: false
+debug: false
 force: false
 merge: false
 kubie: false
@@ -110,6 +111,7 @@ you can also use the following environement variable
 `KARBON_USER`  
 `KARBON_INSECURE`  
 `KARBON_VERBOSE`  
+`KARBON_DEBUG`  
 `KARBON_FORCE`  
 `KARBON_MERGE`  
 `KARBON_PASSWORD`  

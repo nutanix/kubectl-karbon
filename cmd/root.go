@@ -6,7 +6,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -27,6 +27,7 @@ import (
 
 var cfgFile string
 var verbose bool
+var debug bool
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -54,15 +55,16 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "Karbon plugin config file (default ~/.kubectl-karbon.yaml)")
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Print verbose logging information")
-	rootCmd.PersistentFlags().Int("request-timeout", 30, "Request timeout in seconds for HTTP client")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "karbon plugin config file (default ~/.kubectl-karbon.yaml)")
+	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "print verbose logging information")
+	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "print debug logging information")
+	rootCmd.PersistentFlags().Int("request-timeout", 30, "request timeout in seconds for HTTP client")
 
 	userHomeDir, err := os.UserHomeDir()
 	cobra.CheckErr(err)
 	defaultKubeconfig := fmt.Sprintf("%s/.kube/config", userHomeDir)
 
-	rootCmd.PersistentFlags().String("kubeconfig", defaultKubeconfig, "Path to the kubeconfig file to use for CLI requests")
+	rootCmd.PersistentFlags().String("kubeconfig", defaultKubeconfig, "path to the kubeconfig file to use for CLI requests")
 	viper.BindPFlag("kubeconfig", rootCmd.PersistentFlags().Lookup("kubeconfig"))
 
 	// Cobra also supports local flags, which will only run
