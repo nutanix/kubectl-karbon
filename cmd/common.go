@@ -391,6 +391,17 @@ func (c *nutanixCluster) clusterRequest(method string, path string, payload []by
 
 	defer res.Body.Close()
 
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	if debug {
+		fmt.Printf("req: %s %s\n", method, requestUrl)
+		fmt.Printf("res.StatusCode: %d\n", res.StatusCode)
+		fmt.Printf("res.Body: %s\n", body)
+	}
+
 	switch res.StatusCode {
 	case 401:
 		if viper.GetBool("keyring") {
@@ -398,20 +409,16 @@ func (c *nutanixCluster) clusterRequest(method string, path string, payload []by
 			cobra.CheckErr(err)
 		}
 		return nil, fmt.Errorf("invalid client credentials")
+	case 403:
+		return nil, fmt.Errorf("authorization failure, only system roles are supported with NKE")
 	case 404:
 		return nil, fmt.Errorf("karbon cluster not found")
 	case 200:
-		// OK
+		return body, nil
 	default:
 		return nil, fmt.Errorf("internal Error")
 	}
 
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return body, nil
 }
 
 // SaveKubeConfig handles writing the kubeconfig to the file system.

@@ -122,22 +122,26 @@ If option enabled retrieve SSH key/cert and add them to ssh-agent or in file in 
 				}
 
 				karbonSSHJSON, err := nutanixCluster.clusterRequest(method, karbonSSHPath, nil)
-				cobra.CheckErr(err)
 
-				var karbonSSH sshConfig
+				if err != nil {
+					fmt.Printf("Failed to retrieve SSH key/cert for cluster %s\n", karbonCluster)
+				} else {
+					var karbonSSH sshConfig
 
-				err = json.Unmarshal([]byte(karbonSSHJSON), &karbonSSH)
-				cobra.CheckErr(err)
-
-				if viper.GetBool("ssh-file") {
-					err = saveKeyFile(karbonCluster, karbonSSH, viper.GetBool("force"))
+					err = json.Unmarshal([]byte(karbonSSHJSON), &karbonSSH)
 					cobra.CheckErr(err)
+
+					if viper.GetBool("ssh-file") {
+						err = saveKeyFile(karbonCluster, karbonSSH, viper.GetBool("force"))
+						cobra.CheckErr(err)
+					}
+
+					if viper.GetBool("ssh-agent") {
+						err = addKeyAgent(karbonCluster, karbonSSH)
+						cobra.CheckErr(err)
+					}
 				}
 
-				if viper.GetBool("ssh-agent") {
-					err = addKeyAgent(karbonCluster, karbonSSH)
-					cobra.CheckErr(err)
-				}
 			}
 
 			fmt.Printf("Logged successfully into %s cluster\n", karbonCluster)
