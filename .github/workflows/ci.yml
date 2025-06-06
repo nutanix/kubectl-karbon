@@ -9,12 +9,12 @@ jobs:
     name: Check
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
     - name: Setup Go
       uses: actions/setup-go@v5
       with:
         go-version-file: go.mod
-    - name: Checkout Code
-      uses: actions/checkout@v4
     - name: Lint Go Code
       run: |
         go install honnef.co/go/tools/cmd/staticcheck@latest
@@ -24,12 +24,12 @@ jobs:
     name: Vet
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
     - name: Setup Go
       uses: actions/setup-go@v5
       with:
         go-version-file: go.mod
-    - name: Checkout Code
-      uses: actions/checkout@v4
     - name: Vet Go code
       run: make vet
 
@@ -37,12 +37,12 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
     - name: Setup Go
       uses: actions/setup-go@v5
       with:
         go-version-file: go.mod
-    - name: Checkout Code
-      uses: actions/checkout@v4
     - name: Test
       run: make test
 
@@ -51,13 +51,13 @@ jobs:
     runs-on: ubuntu-latest
     needs: [check, vet, test]
     steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
     - name: Setup Go
       uses: actions/setup-go@v5
       with:
         go-version-file: go.mod
-
-    - name: Checkout Code
-      uses: actions/checkout@v4
 
     - name: build
       run: make build
