@@ -12,7 +12,7 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v6
     - name: Setup Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
         go-version-file: go.mod
     - name: Lint Go Code
@@ -27,7 +27,7 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v6
     - name: Setup Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
         go-version-file: go.mod
     - name: Vet Go code
@@ -40,7 +40,7 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v6
     - name: Setup Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
         go-version-file: go.mod
     - name: Test
@@ -55,7 +55,7 @@ jobs:
       uses: actions/checkout@v6
 
     - name: Setup Go
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
         go-version-file: go.mod
 
